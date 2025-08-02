@@ -6,6 +6,8 @@
     <title>Wrestling.Systems - Coming Soon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <!-- 1. Add Cloudflare Turnstile Script -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -75,6 +77,10 @@
                             <option value="coach">Coach</option>
                         </select>
                     </div>
+
+                    <!-- 2. Add Turnstile Widget Container -->
+                    <div class="cf-turnstile" data-sitekey="YOUR_TURNSTILE_SITE_KEY" data-theme="dark"></div>
+
                     <div>
                         <button type="submit" id="submit-button"
                             class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 transition-all duration-300">
@@ -157,11 +163,23 @@
             signInWithPopup
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // 3. Import App Check
+        import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
+
 
         // Initialize Firebase
         const app = initializeApp(finalFirebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // 4. Initialize App Check with Turnstile
+        // IMPORTANT: You must have configured App Check in your Firebase project
+        // and linked it to your Cloudflare Turnstile keys.
+        // The ReCaptchaV3Provider is used because Turnstile is API-compatible.
+        const appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider('YOUR_TURNSTILE_SITE_KEY'),
+            isTokenAutoRefreshEnabled: true
+        });
         
         // --- Initialize Auth Providers ---
         const googleProvider = new GoogleAuthProvider();
@@ -218,6 +236,8 @@
         // Handle Email/Password form submission
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            // Note: Turnstile validation is handled automatically by App Check
+            // before the request is sent to Firebase Auth.
             submitButton.disabled = true;
             submitButton.textContent = 'Creating Account...';
             errorMessage.textContent = '';
@@ -237,6 +257,7 @@
                 let friendlyMessage = "An unexpected error occurred.";
                 if (error.code === 'auth/email-already-in-use') friendlyMessage = 'This email address is already registered.';
                 if (error.code === 'auth/weak-password') friendlyMessage = 'Password should be at least 6 characters long.';
+                if (error.code.includes('app-check')) friendlyMessage = 'Could not verify you are human. Please refresh and try again.';
                 showError(friendlyMessage);
             } finally {
                 submitButton.disabled = false;
@@ -253,6 +274,8 @@
              } catch (error) {
                 if (error.code === 'auth/account-exists-with-different-credential') {
                      showError("An account already exists with this email. Please sign in with your original method.");
+                } else if (error.code.includes('app-check')) {
+                    showError('Could not verify you are human. Please refresh and try again.');
                 } else {
                      showError(`Could not sign in with ${provider.providerId}. Please try again.`);
                 }
