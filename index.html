@@ -20,15 +20,6 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        .form-select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
         /* Custom Gold Color */
         .bg-gold-500 { background-color: #D4AF37; }
         .hover\:bg-gold-600:hover { background-color: #C09B2D; }
@@ -81,15 +72,6 @@
                             class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
                     </div>
                     <div>
-                        <label for="role" class="block text-sm font-medium text-gray-300">I am a...</label>
-                        <select id="role" name="role" required
-                            class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500 appearance-none form-select">
-                            <option value="athlete">Athlete</option>
-                            <option value="coach">Coach</option>
-                        </select>
-                    </div>
-
-                    <div>
                         <button type="submit" id="submit-button"
                             class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gold-500 hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
                             Create My Account
@@ -125,7 +107,7 @@
 
             <!-- Success Message -->
             <div id="success-message" class="hidden text-center py-8">
-                 <svg class="mx-auto h-16 w-16 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="mx-auto h-16 w-16 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <h2 class="mt-4 text-2xl font-bold text-white">You're In!</h2>
@@ -147,17 +129,19 @@
             createUserWithEmailAndPassword, 
             GoogleAuthProvider,
             FacebookAuthProvider,
-            OAuthProvider, // Generic provider for Microsoft, etc.
+            OAuthProvider,
             signInWithPopup
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
         // Your web app's Firebase configuration
-        // This object connects your site to your Firebase project.
+        // Using 'auth.wrestling.systems' for Firebase Authentication
+        // Ensure 'auth.wrestling.systems' is verified in Firebase Console > Hosting and Authentication > Authorized domains
+        // Add A records in Cloudflare: auth.wrestling.systems -> 151.101.1.195 and 151.101.65.195
         const firebaseConfig = {
             apiKey: "AIzaSyASn9xe5RRKFGXNi-Vha-NunDYj1mv7D3g",
-            authDomain: "auth.wrestling.systems",  // Change to "wrestlingsystems.firebaseapp.com" if not using custom domain
+            authDomain: "auth.wrestling.systems",
             projectId: "wrestlingsystems",
             storageBucket: "wrestlingsystems.appspot.com",
             messagingSenderId: "255692661115",
@@ -170,14 +154,14 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Initialize App Check with reCAPTCHA v3 (get your real key from Google reCAPTCHA admin)
-        // For dev/testing, use a placeholder; in prod, replace with actual reCAPTCHA v3 key (starts with '6L...')
+        // Initialize App Check with reCAPTCHA v3
+        // Replace with your reCAPTCHA v3 site key from Google reCAPTCHA admin console, registered for wrestling.systems
         const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider('6Ler2pgrAAAAAAQwDvNoe4voerXxtlVTwvdi0sg2'),  // Replace this!
+            provider: new ReCaptchaV3Provider('6Ler2pgrAAAAAAQwDvNoe4voerXxtlVTwvdi0sg2'),
             isTokenAutoRefreshEnabled: true
         });
         
-        // --- Initialize Auth Providers ---
+        // Initialize Auth Providers
         const googleProvider = new GoogleAuthProvider();
         const facebookProvider = new FacebookAuthProvider();
         const microsoftProvider = new OAuthProvider('microsoft.com');
@@ -192,7 +176,7 @@
         const facebookSignInButton = document.getElementById('facebook-signin');
         const microsoftSignInButton = document.getElementById('microsoft-signin');
 
-        // --- Helper Functions ---
+        // Helper Functions
         const showSuccess = () => {
             formContainer.classList.add('hidden');
             successMessage.classList.remove('hidden');
@@ -203,29 +187,33 @@
             if (errorObj) console.error("Sign-in Error:", errorObj.code, errorObj.message);
         };
 
-        // Function to handle creating user data in Firestore after social sign-in
+        // Handle creating user data in Firestore after social sign-in
         const createSocialUserInFirestore = async (user) => {
-            const userRef = doc(db, "users", user.uid);
-            const docSnap = await getDoc(userRef);
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
 
-            if (!docSnap.exists()) {
-                const nameParts = user.displayName ? user.displayName.split(' ') : ['', ''];
-                const firstName = nameParts[0];
-                const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-                
-                await setDoc(userRef, {
-                    firstName: firstName,
-                    lastName: lastName,
-                    email: user.email,
-                    role: 'undetermined', // Role will be set upon first login to the full app
-                    createdAt: new Date(),
-                    provider: user.providerData[0].providerId
-                });
+                if (!docSnap.exists()) {
+                    const nameParts = user.displayName ? user.displayName.split(' ') : ['', ''];
+                    const firstName = nameParts[0];
+                    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+                    
+                    await setDoc(userRef, {
+                        firstName: firstName,
+                        lastName: lastName,
+                        email: user.email,
+                        createdAt: new Date(),
+                        provider: user.providerData[0].providerId
+                    });
+                }
+                showSuccess();
+            } catch (error) {
+                showError("Failed to save user data. Please try again.", error);
+                throw error;
             }
-            showSuccess();
         };
 
-        // --- Event Listeners ---
+        // Event Listeners
 
         // Handle Email/Password form submission
         signupForm.addEventListener('submit', async (e) => {
@@ -233,7 +221,7 @@
             submitButton.disabled = true;
             submitButton.textContent = 'Creating Account...';
             errorMessage.textContent = '';
-            const { firstName, lastName, email, password, role } = signupForm;
+            const { firstName, lastName, email, password } = signupForm;
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value);
                 const user = userCredential.user;
@@ -241,7 +229,6 @@
                     firstName: firstName.value,
                     lastName: lastName.value,
                     email: email.value,
-                    role: role.value,
                     createdAt: new Date()
                 });
                 showSuccess();
@@ -250,6 +237,8 @@
                 if (error.code === 'auth/email-already-in-use') friendlyMessage = 'This email address is already registered.';
                 if (error.code === 'auth/weak-password') friendlyMessage = 'Password should be at least 6 characters long.';
                 if (error.code.includes('app-check')) friendlyMessage = 'Could not verify you are human. Please refresh and try again.';
+                if (error.code === 'auth/unauthorized-domain') friendlyMessage = 'Authentication domain not authorized. Please contact support or try again later.';
+                if (error.code === 'permission-denied') friendlyMessage = 'Failed to save user data due to permissions. Please contact support.';
                 showError(friendlyMessage, error);
             } finally {
                 submitButton.disabled = false;
@@ -259,29 +248,32 @@
         
         // Generic Social Sign-in Handler
         const handleSocialSignIn = async (provider, button) => {
-             errorMessage.textContent = '';
-             button.disabled = true;  // Disable button during sign-in
-             try {
+            errorMessage.textContent = '';
+            button.disabled = true;
+            try {
                 const result = await signInWithPopup(auth, provider);
                 await createSocialUserInFirestore(result.user);
-             } catch (error) {
+            } catch (error) {
                 let friendlyMessage = `Could not sign in with ${provider.providerId}. Please try again.`;
                 if (error.code === 'auth/account-exists-with-different-credential') {
-                     friendlyMessage = "An account already exists with this email. Please sign in with your original method.";
+                    friendlyMessage = "An account already exists with this email. Please sign in with your original method.";
                 } else if (error.code.includes('app-check')) {
                     friendlyMessage = 'Could not verify you are human. Please refresh and try again.';
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    friendlyMessage = 'Authentication domain not authorized. Please contact support or try again later.';
+                } else if (error.code === 'permission-denied') {
+                    friendlyMessage = 'Failed to save user data due to permissions. Please contact support.';
                 }
                 showError(friendlyMessage, error);
-             } finally {
+            } finally {
                 button.disabled = false;
-             }
+            }
         };
 
         // Attach event listeners
         googleSignInButton.addEventListener('click', () => handleSocialSignIn(googleProvider, googleSignInButton));
         facebookSignInButton.addEventListener('click', () => handleSocialSignIn(facebookProvider, facebookSignInButton));
         microsoftSignInButton.addEventListener('click', () => handleSocialSignIn(microsoftProvider, microsoftSignInButton));
-
     </script>
 </body>
 </html>
