@@ -16,6 +16,8 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <!-- 1. Add Cloudflare Turnstile Script -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -89,6 +91,9 @@
                         </select>
                     </div>
 
+                    <!-- 2. Add Turnstile Widget Container with Development Key -->
+                    <div class="cf-turnstile" data-sitekey="0x4AAAAAABnzycBjoFshc33F" data-theme="dark"></div>
+
                     <div>
                         <button type="submit" id="submit-button"
                             class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gold-500 hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
@@ -157,7 +162,7 @@
         // This object connects your site to your Firebase project.
         const firebaseConfig = {
             apiKey: "AIzaSyASn9xe5RRKFGXNi-Vha-NunDYj1mv7D3g",
-            authDomain: "wrestling.systems",  // Change to "wrestlingsystems.firebaseapp.com" if not using custom domain
+            authDomain: "wrestling.systems",
             projectId: "wrestlingsystems",
             storageBucket: "wrestlingsystems.appspot.com",
             messagingSenderId: "255692661115",
@@ -170,10 +175,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Initialize App Check with reCAPTCHA v3 (get your real key from Google reCAPTCHA admin)
-        // For dev/testing, use a placeholder; in prod, replace with actual reCAPTCHA v3 key (starts with '6L...')
+        // Initialize App Check with Turnstile
+        // This key is for development and testing only. It will always pass.
         const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_V3_SITE_KEY_HERE'),  // Replace this!
+            provider: new ReCaptchaV3Provider('0x4AAAAAABnzycBjoFshc33F00000AA'),
             isTokenAutoRefreshEnabled: true
         });
         
@@ -198,9 +203,9 @@
             successMessage.classList.remove('hidden');
         };
 
-        const showError = (message, errorObj = null) => {
+        const showError = (message) => {
             errorMessage.textContent = message;
-            if (errorObj) console.error("Sign-in Error:", errorObj.code, errorObj.message);
+            console.error("Sign-in Error:", message);
         };
 
         // Function to handle creating user data in Firestore after social sign-in
@@ -250,7 +255,7 @@
                 if (error.code === 'auth/email-already-in-use') friendlyMessage = 'This email address is already registered.';
                 if (error.code === 'auth/weak-password') friendlyMessage = 'Password should be at least 6 characters long.';
                 if (error.code.includes('app-check')) friendlyMessage = 'Could not verify you are human. Please refresh and try again.';
-                showError(friendlyMessage, error);
+                showError(friendlyMessage);
             } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Create My Account';
@@ -258,29 +263,26 @@
         });
         
         // Generic Social Sign-in Handler
-        const handleSocialSignIn = async (provider, button) => {
+        const handleSocialSignIn = async (provider) => {
              errorMessage.textContent = '';
-             button.disabled = true;  // Disable button during sign-in
              try {
                 const result = await signInWithPopup(auth, provider);
                 await createSocialUserInFirestore(result.user);
              } catch (error) {
-                let friendlyMessage = `Could not sign in with ${provider.providerId}. Please try again.`;
                 if (error.code === 'auth/account-exists-with-different-credential') {
-                     friendlyMessage = "An account already exists with this email. Please sign in with your original method.";
+                     showError("An account already exists with this email. Please sign in with your original method.");
                 } else if (error.code.includes('app-check')) {
-                    friendlyMessage = 'Could not verify you are human. Please refresh and try again.';
+                    showError('Could not verify you are human. Please refresh and try again.');
+                } else {
+                     showError(`Could not sign in with ${provider.providerId}. Please try again.`);
                 }
-                showError(friendlyMessage, error);
-             } finally {
-                button.disabled = false;
              }
         };
 
         // Attach event listeners
-        googleSignInButton.addEventListener('click', () => handleSocialSignIn(googleProvider, googleSignInButton));
-        facebookSignInButton.addEventListener('click', () => handleSocialSignIn(facebookProvider, facebookSignInButton));
-        microsoftSignInButton.addEventListener('click', () => handleSocialSignIn(microsoftProvider, microsoftSignInButton));
+        googleSignInButton.addEventListener('click', () => handleSocialSignIn(googleProvider));
+        facebookSignInButton.addEventListener('click', () => handleSocialSignIn(facebookProvider));
+        microsoftSignInButton.addEventListener('click', () => handleSocialSignIn(microsoftProvider));
 
     </script>
 </body>
