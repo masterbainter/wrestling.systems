@@ -35,15 +35,8 @@
         <div class="w-full max-w-lg mx-auto text-center pt-12">
             <!-- Logo/Header -->
             <img src="https://assets.wrestling.systems/logo-gemini2.png" alt="Wrestling.Systems Logo" class="w-48 mx-auto mb-6">
-            <p class="text-xl md:text-2xl font-medium text-gold-300 mb-4">
+            <p class="text-xl md:text-2xl font-medium text-gold-300 mb-8">
                 The Revolution in Wrestling Training is Coming.
-            </p>
-        </div>
-
-        <!-- App Description Section -->
-        <div class="w-full max-w-xl mx-auto text-center px-4 mb-8">
-            <p class="text-lg text-gray-300 leading-relaxed">
-                Wrestling.Systems is the ultimate platform for wrestling coaches to build, share, and track their training systems. Empower your athletes with proven techniques and monitor their progress, all in one place.
             </p>
         </div>
 
