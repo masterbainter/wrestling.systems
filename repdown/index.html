@@ -99,7 +99,7 @@
             </div>
 
             <button id="done-btn" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-5 px-6 rounded-xl border-2 border-amber-400 btn-glow" disabled>
-                Round Complete
+                Start Next Round
             </button>
         </div>
 
@@ -278,12 +278,14 @@
         
         function finishWorkout() {
             clearInterval(totalTimerInterval);
+            document.title = 'Rep Down';
             workoutScreen.classList.add('hidden');
             completeScreen.classList.remove('hidden');
         }
-
+        
         function resetApp() {
             clearInterval(totalTimerInterval);
+            document.title = 'Rep Down';
             document.getElementById('total-timer-container').classList.remove('text-red-500');
             updateChallengeInfo();
             completeScreen.classList.add('hidden');
@@ -309,17 +311,20 @@
 
             let timeLeft = 600; // 10 minutes
             totalTimerDisplay.textContent = formatTime(timeLeft);
+            document.title = `${formatTime(timeLeft)} - Rep Down`;
             const container = document.getElementById('total-timer-container');
             container.querySelector('p:first-child').classList.remove('text-red-500');
             totalTimerDisplay.classList.remove('text-red-500');
-
             totalTimerInterval = setInterval(() => {
                 timeLeft--;
-                totalTimerDisplay.textContent = formatTime(timeLeft);
+                const formattedTime = formatTime(timeLeft);
+                totalTimerDisplay.textContent = formattedTime;
+                document.title = `${formattedTime} - Rep Down`;
 
                 if (timeLeft <= 0) {
                     clearInterval(totalTimerInterval);
                     totalTimerDisplay.textContent = "Time's Up!";
+                    document.title = "Time's Up! - Rep Down";
                     container.querySelector('p:first-child').classList.add('text-red-500');
                     totalTimerDisplay.classList.add('text-red-500');
                 }
@@ -329,4 +334,3 @@
     </script>
 </body>
 </html>
-
