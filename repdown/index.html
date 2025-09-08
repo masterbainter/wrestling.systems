@@ -12,11 +12,6 @@
             touch-action: manipulation;
             background-color: #000; /* Force black background */
         }
-        .timer-circle {
-            stroke-dasharray: 283;
-            stroke-dashoffset: 0;
-            transition: stroke-dashoffset 1s linear;
-        }
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -36,8 +31,12 @@
             transition: all 0.2s ease-in-out;
             box-shadow: 0 0 5px rgba(255, 191, 0, 0.7), 0 0 10px rgba(255, 191, 0, 0.5);
         }
-        .btn-glow:hover {
+        .btn-glow:hover:not(:disabled) {
             box-shadow: 0 0 10px rgba(255, 191, 0, 0.9), 0 0 20px rgba(255, 191, 0, 0.7);
+        }
+        .exercise-item[data-completed="true"] .exercise-name {
+            text-decoration: line-through;
+            color: #6b7280; /* gray-500 */
         }
     </style>
 </head>
@@ -49,13 +48,32 @@
         <div id="setup-screen">
             <h1 class="text-4xl sm:text-5xl font-extrabold text-amber-400 mb-4 text-glow">Rep Down</h1>
             <p id="challenge-day-info" class="text-amber-400 font-bold text-2xl mb-4 text-glow"></p>
-            <p class="text-gray-400 mb-8 text-lg">Select your starting reps and get ready to work.</p>
             
             <div class="bg-black/50 p-6 rounded-xl">
-                <label for="reps-input" class="block text-lg font-semibold mb-3 text-gray-300">Starting Reps</label>
-                <input type="number" id="reps-input" value="10" min="2" max="100" class="w-full bg-gray-800 text-white text-3xl text-center font-bold p-4 rounded-xl border-2 border-gray-600 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none">
-                <p id="error-message" class="text-red-500 text-sm mt-2 hidden">Please enter a number between 2 and 100.</p>
-                <button id="start-btn" class="mt-6 w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-4 px-6 rounded-xl border-2 border-amber-400 btn-glow">
+                <div class="mb-6">
+                    <label class="block text-lg font-semibold mb-3 text-gray-300">Select Your Exercises</label>
+                    <div id="exercise-selection" class="space-y-3 text-left w-fit mx-auto">
+                        <div class="flex items-center">
+                            <input id="pushups-check" type="checkbox" checked value="Pushups" class="w-5 h-5 text-amber-400 bg-gray-700 border-gray-600 rounded focus:ring-amber-500 focus:ring-2">
+                            <label for="pushups-check" class="ml-3 text-lg font-medium text-gray-300">Pushups</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="squats-check" type="checkbox" checked value="Squats" class="w-5 h-5 text-amber-400 bg-gray-700 border-gray-600 rounded focus:ring-amber-500 focus:ring-2">
+                            <label for="squats-check" class="ml-3 text-lg font-medium text-gray-300">Squats</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="vups-check" type="checkbox" checked value="V-ups" class="w-5 h-5 text-amber-400 bg-gray-700 border-gray-600 rounded focus:ring-amber-500 focus:ring-2">
+                            <label for="vups-check" class="ml-3 text-lg font-medium text-gray-300">V-ups</label>
+                        </div>
+                    </div>
+                    <p id="exercise-error" class="text-red-500 text-sm mt-2 hidden">Please select at least one exercise.</p>
+                </div>
+                <div class="mb-4">
+                    <label for="reps-input" class="block text-lg font-semibold mb-3 text-gray-300">Starting Reps</label>
+                    <input type="number" id="reps-input" value="10" min="1" max="100" class="w-full bg-gray-800 text-white text-3xl text-center font-bold p-4 rounded-xl border-2 border-gray-600 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none">
+                    <p id="reps-error" class="text-red-500 text-sm mt-2 hidden">Please enter a number between 1 and 100.</p>
+                </div>
+                <button id="start-btn" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-4 px-6 rounded-xl border-2 border-amber-400 btn-glow">
                     Start Workout
                 </button>
             </div>
@@ -64,29 +82,24 @@
         <!-- Workout Screen -->
         <div id="workout-screen" class="hidden">
             <div id="total-timer-container" class="mb-4">
-                <p class="text-gray-400 text-lg font-semibold">Time Remaining</p>
-                <p id="total-timer" class="text-4xl font-bold text-gray-200">10:00</p>
+                <p class="text-gray-400 text-lg font-semibold">Time Remaining for this Round</p>
+                <p id="total-timer" class="text-5xl font-bold text-gray-200">10:00</p>
             </div>
-            <div id="rep-display" class="mb-8">
-                <p class="text-gray-400 text-2xl font-semibold">Current Set</p>
-                <p id="current-reps" class="text-8xl sm:text-9xl font-extrabold text-amber-400 text-glow">10</p>
-                <p class="text-gray-400 text-2xl font-semibold">Reps</p>
-            </div>
-
-            <div id="timer-display" class="relative w-48 h-48 sm:w-56 sm:h-56 mx-auto mb-8 flex items-center justify-center">
-                 <!-- Timer SVG Circle -->
-                <svg class="absolute inset-0" viewBox="0 0 100 100">
-                    <circle class="text-gray-700" stroke-width="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
-                    <circle id="timer-progress" class="text-amber-400 timer-circle" stroke-width="8" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" transform="rotate(-90 50 50)" />
-                </svg>
-                <div class="z-10">
-                    <p id="timer-status" class="text-xl font-bold text-gray-400">REST</p>
-                    <p id="timer" class="text-5xl sm:text-6xl font-bold text-white text-glow">30</p>
-                </div>
+            <div id="rep-display" class="mb-4">
+                <p class="text-gray-400 text-2xl font-semibold">Current Round</p>
+                <p id="current-reps" class="text-8xl font-extrabold text-amber-400 text-glow">10</p>
+                <p class="text-gray-400 text-2xl font-semibold">Reps per Exercise</p>
             </div>
 
-            <button id="done-btn" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-5 px-6 rounded-xl border-2 border-amber-400 btn-glow">
-                Set Complete
+            <div id="exercise-list" class="my-6 bg-black/50 p-4 sm:p-6 rounded-xl">
+                 <h3 class="text-2xl font-bold text-amber-400 mb-4 text-glow">Complete Your Reps:</h3>
+                 <div id="dynamic-exercise-list" class="space-y-3">
+                    <!-- Dynamic content will be injected here -->
+                 </div>
+            </div>
+
+            <button id="done-btn" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-5 px-6 rounded-xl border-2 border-amber-400 btn-glow" disabled>
+                Round Complete
             </button>
         </div>
 
@@ -114,54 +127,44 @@
         const startBtn = document.getElementById('start-btn');
         const doneBtn = document.getElementById('done-btn');
         const restartBtn = document.getElementById('restart-btn');
-        const errorMessage = document.getElementById('error-message');
+        
+        const repsError = document.getElementById('reps-error');
+        const exerciseError = document.getElementById('exercise-error');
+        const exerciseCheckboxes = document.querySelectorAll('#exercise-selection input[type="checkbox"]');
+        const dynamicExerciseList = document.getElementById('dynamic-exercise-list');
 
         const currentRepsDisplay = document.getElementById('current-reps');
-        const timerDisplay = document.getElementById('timer');
-        const timerStatus = document.getElementById('timer-status');
-        const timerProgress = document.getElementById('timer-progress');
         const totalTimerDisplay = document.getElementById('total-timer');
         const challengeDayInfo = document.getElementById('challenge-day-info');
         
         // App State
         let startingReps = 10;
         let currentReps = 10;
-        let timerInterval;
         let totalTimerInterval;
-        let secondsLeft = 0;
-        const FULL_DASH_ARRAY = 283;
+        let selectedExercises = [];
         
-        // Store original button classes
-        let originalDoneBtnClasses;
-
-
         // Event Listeners
         startBtn.addEventListener('click', startWorkout);
-        doneBtn.addEventListener('click', completeSet);
+        doneBtn.addEventListener('click', completeRound);
         restartBtn.addEventListener('click', resetApp);
         repsInput.addEventListener('change', () => {
-             if(parseInt(repsInput.value) < 2) repsInput.value = 2;
+             if(parseInt(repsInput.value) < 1) repsInput.value = 1;
              if(parseInt(repsInput.value) > 100) repsInput.value = 100;
         });
-        window.addEventListener('DOMContentLoaded', () => {
-            updateChallengeInfo();
-            originalDoneBtnClasses = doneBtn.className; // Store original classes
-        });
+        window.addEventListener('DOMContentLoaded', updateChallengeInfo);
 
         // --- Core Functions ---
 
         function updateChallengeInfo() {
             const today = new Date();
-            // Set time to 0 to compare dates only, avoiding timezone issues
             today.setHours(0, 0, 0, 0);
 
             const currentYear = today.getFullYear();
-            // Month is 0-indexed, so 8 is September
             const startDate = new Date(currentYear, 8, 10); 
             startDate.setHours(0, 0, 0, 0);
 
             const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 19); // 20-day challenge
+            endDate.setDate(startDate.getDate() + 19);
 
             if (today < startDate) {
                 challengeDayInfo.textContent = `Challenge starts on 09/10.`;
@@ -170,7 +173,6 @@
                 challengeDayInfo.textContent = `The 20-Day Challenge has ended.`;
                 repsInput.value = 10;
             } else {
-                // Challenge is active
                 const timeDiff = today.getTime() - startDate.getTime();
                 const dayNumber = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
                 const defaultReps = 10 + (dayNumber - 1);
@@ -180,35 +182,88 @@
             }
         }
 
-        function startWorkout() {
-            startingReps = parseInt(repsInput.value);
-            if (isNaN(startingReps) || startingReps < 2 || startingReps > 100) {
-                errorMessage.classList.remove('hidden');
-                repsInput.classList.add('border-red-500');
-                return;
+        function validateInputs() {
+            let isValid = true;
+            
+            // Validate Reps
+            const reps = parseInt(repsInput.value);
+            if (isNaN(reps) || reps < 1 || reps > 100) {
+                repsError.classList.remove('hidden');
+                isValid = false;
+            } else {
+                repsError.classList.add('hidden');
             }
-            errorMessage.classList.add('hidden');
-            repsInput.classList.remove('border-red-500');
 
+            // Validate Exercise Selection
+            selectedExercises = Array.from(exerciseCheckboxes)
+                                   .filter(cb => cb.checked)
+                                   .map(cb => cb.value);
+            if (selectedExercises.length === 0) {
+                exerciseError.classList.remove('hidden');
+                isValid = false;
+            } else {
+                exerciseError.classList.add('hidden');
+            }
+
+            return isValid;
+        }
+
+        function startWorkout() {
+            if (!validateInputs()) return;
+
+            startingReps = parseInt(repsInput.value);
             currentReps = startingReps;
             
             updateRepDisplay();
+            buildExerciseTrackers();
             startTotalTimer();
 
             setupScreen.classList.add('hidden');
             workoutScreen.classList.remove('hidden');
             completeScreen.classList.add('hidden');
-            
-            // Start with a "GET READY" timer
-            timerStatus.textContent = "GET READY";
-            startTimer(10, () => {
-                timerStatus.textContent = "GO!";
-                enableDoneButton();
-            });
-            disableDoneButton();
         }
 
-        function completeSet() {
+        function buildExerciseTrackers() {
+            dynamicExerciseList.innerHTML = '';
+            selectedExercises.forEach(exerciseName => {
+                const item = document.createElement('div');
+                item.className = 'exercise-item flex items-center justify-between bg-gray-800 p-3 rounded-lg';
+                item.dataset.completed = 'false';
+
+                const nameEl = document.createElement('span');
+                nameEl.className = 'exercise-name text-lg font-medium text-gray-300';
+                nameEl.textContent = exerciseName;
+
+                const buttonEl = document.createElement('button');
+                buttonEl.className = 'complete-exercise-btn bg-gray-600 hover:bg-amber-500 text-white font-bold py-2 px-4 rounded-md transition-colors';
+                buttonEl.textContent = 'Done';
+                buttonEl.onclick = () => markExerciseComplete(item, buttonEl);
+
+                item.appendChild(nameEl);
+                item.appendChild(buttonEl);
+                dynamicExerciseList.appendChild(item);
+            });
+            doneBtn.disabled = true;
+        }
+        
+        function markExerciseComplete(item, button) {
+            item.dataset.completed = 'true';
+            button.disabled = true;
+            button.textContent = '✔';
+            button.classList.remove('bg-gray-600', 'hover:bg-amber-500');
+            button.classList.add('bg-green-600');
+            checkIfRoundIsComplete();
+        }
+
+        function checkIfRoundIsComplete() {
+            const allItems = dynamicExerciseList.querySelectorAll('.exercise-item');
+            const allCompleted = Array.from(allItems).every(item => item.dataset.completed === 'true');
+            if (allCompleted) {
+                doneBtn.disabled = false;
+            }
+        }
+
+        function completeRound() {
             currentReps--;
             
             if (currentReps <= 0) {
@@ -217,51 +272,10 @@
             }
             
             updateRepDisplay();
-            
-            const restTime = Math.max(15, Math.min(60, currentReps * 2));
-            timerStatus.textContent = "REST";
-            
-            startTimer(restTime, () => {
-                timerStatus.textContent = "GO!";
-                enableDoneButton();
-            });
-            
-            disableDoneButton();
+            buildExerciseTrackers(); // Rebuild for next round
+            startTotalTimer(); // Reset and start the timer
         }
         
-        function disableDoneButton() {
-            doneBtn.disabled = true;
-            doneBtn.className = "w-full bg-gray-600 text-gray-400 font-bold text-xl py-5 px-6 rounded-xl border-2 border-gray-600 cursor-not-allowed";
-        }
-        
-        function enableDoneButton() {
-            doneBtn.disabled = false;
-            doneBtn.className = originalDoneBtnClasses;
-        }
-
-
-        function startTimer(duration, onComplete) {
-            clearInterval(timerInterval);
-            secondsLeft = duration;
-            timerDisplay.textContent = secondsLeft;
-            updateCircleDashoffset(duration, secondsLeft);
-
-            timerInterval = setInterval(() => {
-                secondsLeft--;
-                timerDisplay.textContent = secondsLeft;
-                updateCircleDashoffset(duration, secondsLeft);
-
-                if (secondsLeft <= 0) {
-                    clearInterval(timerInterval);
-                    timerDisplay.textContent = "GO!";
-                    new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjQwLjEwMQAAAAlJbmb+ सिनोनाAAAExBTUUzLjk5LjVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAB/8ANgAADIABEhAZGZ23sYSAw8dAAAAAElFTkSuQmCC').play();
-                    if (onComplete) {
-                        onComplete();
-                    }
-                }
-            }, 1000);
-        }
-
         function finishWorkout() {
             clearInterval(totalTimerInterval);
             workoutScreen.classList.add('hidden');
@@ -269,29 +283,18 @@
         }
 
         function resetApp() {
-            clearInterval(timerInterval);
             clearInterval(totalTimerInterval);
             document.getElementById('total-timer-container').classList.remove('text-red-500');
-            updateChallengeInfo(); // Recalculate default reps
+            updateChallengeInfo();
             completeScreen.classList.add('hidden');
             workoutScreen.classList.add('hidden');
             setupScreen.classList.remove('hidden');
+            repsError.classList.add('hidden');
+            exerciseError.classList.add('hidden');
         }
 
         function updateRepDisplay() {
             currentRepsDisplay.textContent = currentReps;
-        }
-
-        function calculateTimeFraction(totalTime, timeLeft) {
-            if (totalTime === 0) return 0;
-            const rawFraction = timeLeft / totalTime;
-            return rawFraction - (1 / totalTime) * (1 - rawFraction);
-        }
-
-        function updateCircleDashoffset(duration, timeLeft) {
-            const circleFraction = calculateTimeFraction(duration, timeLeft);
-            const offset = circleFraction * FULL_DASH_ARRAY;
-            timerProgress.style.strokeDashoffset = offset;
         }
 
         function formatTime(seconds) {
@@ -302,6 +305,8 @@
         }
 
         function startTotalTimer() {
+            clearInterval(totalTimerInterval);
+
             let timeLeft = 600; // 10 minutes
             totalTimerDisplay.textContent = formatTime(timeLeft);
             const container = document.getElementById('total-timer-container');
@@ -324,5 +329,4 @@
     </script>
 </body>
 </html>
-
 
