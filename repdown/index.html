@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rep Down</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+            background-color: #000; /* Force black background */
+        }
+        .timer-circle {
+            stroke-dasharray: 283;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        .text-glow {
+            text-shadow: 0 0 8px currentColor;
+        }
+        .container-glow {
+            box-shadow: 0 0 20px rgba(255, 191, 0, 0.4), inset 0 0 15px rgba(255, 191, 0, 0.2);
+            border-color: rgba(255, 191, 0, 0.7);
+        }
+        .btn-glow {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 0 5px rgba(255, 191, 0, 0.7), 0 0 10px rgba(255, 191, 0, 0.5);
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 10px rgba(255, 191, 0, 0.9), 0 0 20px rgba(255, 191, 0, 0.7);
+        }
+    </style>
+</head>
+<body class="bg-black text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app-container" class="w-full max-w-md mx-auto p-4 sm:p-6 text-center bg-gray-900/80 backdrop-blur-sm rounded-2xl border-2 container-glow">
+
+        <!-- Setup Screen -->
+        <div id="setup-screen">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-amber-400 mb-4 text-glow">Rep Down</h1>
+            <p id="challenge-day-info" class="text-amber-400 font-bold text-2xl mb-4 text-glow"></p>
+            <p class="text-gray-400 mb-8 text-lg">Select your starting reps and get ready to work.</p>
+            
+            <div class="bg-black/50 p-6 rounded-xl">
+                <label for="reps-input" class="block text-lg font-semibold mb-3 text-gray-300">Starting Reps</label>
+                <input type="number" id="reps-input" value="10" min="2" max="100" class="w-full bg-gray-800 text-white text-3xl text-center font-bold p-4 rounded-xl border-2 border-gray-600 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none">
+                <p id="error-message" class="text-red-500 text-sm mt-2 hidden">Please enter a number between 2 and 100.</p>
+                <button id="start-btn" class="mt-6 w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-4 px-6 rounded-xl border-2 border-amber-400 btn-glow">
+                    Start Workout
+                </button>
+            </div>
+        </div>
+
+        <!-- Workout Screen -->
+        <div id="workout-screen" class="hidden">
+            <div id="total-timer-container" class="mb-4">
+                <p class="text-gray-400 text-lg font-semibold">Time Remaining</p>
+                <p id="total-timer" class="text-4xl font-bold text-gray-200">10:00</p>
+            </div>
+            <div id="rep-display" class="mb-8">
+                <p class="text-gray-400 text-2xl font-semibold">Current Set</p>
+                <p id="current-reps" class="text-8xl sm:text-9xl font-extrabold text-amber-400 text-glow">10</p>
+                <p class="text-gray-400 text-2xl font-semibold">Reps</p>
+            </div>
+
+            <div id="timer-display" class="relative w-48 h-48 sm:w-56 sm:h-56 mx-auto mb-8 flex items-center justify-center">
+                 <!-- Timer SVG Circle -->
+                <svg class="absolute inset-0" viewBox="0 0 100 100">
+                    <circle class="text-gray-700" stroke-width="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+                    <circle id="timer-progress" class="text-amber-400 timer-circle" stroke-width="8" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" transform="rotate(-90 50 50)" />
+                </svg>
+                <div class="z-10">
+                    <p id="timer-status" class="text-xl font-bold text-gray-400">REST</p>
+                    <p id="timer" class="text-5xl sm:text-6xl font-bold text-white text-glow">30</p>
+                </div>
+            </div>
+
+            <button id="done-btn" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-5 px-6 rounded-xl border-2 border-amber-400 btn-glow">
+                Set Complete
+            </button>
+        </div>
+
+        <!-- Completion Screen -->
+        <div id="complete-screen" class="hidden">
+            <h1 class="text-5xl font-extrabold text-amber-400 mb-4 text-glow">Well Done!</h1>
+            <p class="text-gray-400 text-xl mb-8">You crushed the challenge. Time to recover.</p>
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-amber-400 mx-auto mb-8" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <button id="restart-btn" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-4 px-6 rounded-xl border-2 border-amber-400 btn-glow">
+                New Workout
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // DOM Elements
+        const setupScreen = document.getElementById('setup-screen');
+        const workoutScreen = document.getElementById('workout-screen');
+        const completeScreen = document.getElementById('complete-screen');
+
+        const repsInput = document.getElementById('reps-input');
+        const startBtn = document.getElementById('start-btn');
+        const doneBtn = document.getElementById('done-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const errorMessage = document.getElementById('error-message');
+
+        const currentRepsDisplay = document.getElementById('current-reps');
+        const timerDisplay = document.getElementById('timer');
+        const timerStatus = document.getElementById('timer-status');
+        const timerProgress = document.getElementById('timer-progress');
+        const totalTimerDisplay = document.getElementById('total-timer');
+        const challengeDayInfo = document.getElementById('challenge-day-info');
+        
+        // App State
+        let startingReps = 10;
+        let currentReps = 10;
+        let timerInterval;
+        let totalTimerInterval;
+        let secondsLeft = 0;
+        const FULL_DASH_ARRAY = 283;
+        
+        // Store original button classes
+        let originalDoneBtnClasses;
+
+
+        // Event Listeners
+        startBtn.addEventListener('click', startWorkout);
+        doneBtn.addEventListener('click', completeSet);
+        restartBtn.addEventListener('click', resetApp);
+        repsInput.addEventListener('change', () => {
+             if(parseInt(repsInput.value) < 2) repsInput.value = 2;
+             if(parseInt(repsInput.value) > 100) repsInput.value = 100;
+        });
+        window.addEventListener('DOMContentLoaded', () => {
+            updateChallengeInfo();
+            originalDoneBtnClasses = doneBtn.className; // Store original classes
+        });
+
+        // --- Core Functions ---
+
+        function updateChallengeInfo() {
+            const today = new Date();
+            // Set time to 0 to compare dates only, avoiding timezone issues
+            today.setHours(0, 0, 0, 0);
+
+            const currentYear = today.getFullYear();
+            // Month is 0-indexed, so 8 is September
+            const startDate = new Date(currentYear, 8, 10); 
+            startDate.setHours(0, 0, 0, 0);
+
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 19); // 20-day challenge
+
+            if (today < startDate) {
+                challengeDayInfo.textContent = `Challenge starts on 09/10.`;
+                repsInput.value = 10;
+            } else if (today > endDate) {
+                challengeDayInfo.textContent = `The 20-Day Challenge has ended.`;
+                repsInput.value = 10;
+            } else {
+                // Challenge is active
+                const timeDiff = today.getTime() - startDate.getTime();
+                const dayNumber = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
+                const defaultReps = 10 + (dayNumber - 1);
+
+                challengeDayInfo.textContent = `Day ${dayNumber} of 20`;
+                repsInput.value = defaultReps;
+            }
+        }
+
+        function startWorkout() {
+            startingReps = parseInt(repsInput.value);
+            if (isNaN(startingReps) || startingReps < 2 || startingReps > 100) {
+                errorMessage.classList.remove('hidden');
+                repsInput.classList.add('border-red-500');
+                return;
+            }
+            errorMessage.classList.add('hidden');
+            repsInput.classList.remove('border-red-500');
+
+            currentReps = startingReps;
+            
+            updateRepDisplay();
+            startTotalTimer();
+
+            setupScreen.classList.add('hidden');
+            workoutScreen.classList.remove('hidden');
+            completeScreen.classList.add('hidden');
+            
+            // Start with a "GET READY" timer
+            timerStatus.textContent = "GET READY";
+            startTimer(10, () => {
+                timerStatus.textContent = "GO!";
+                enableDoneButton();
+            });
+            disableDoneButton();
+        }
+
+        function completeSet() {
+            currentReps--;
+            
+            if (currentReps <= 0) {
+                finishWorkout();
+                return;
+            }
+            
+            updateRepDisplay();
+            
+            const restTime = Math.max(15, Math.min(60, currentReps * 2));
+            timerStatus.textContent = "REST";
+            
+            startTimer(restTime, () => {
+                timerStatus.textContent = "GO!";
+                enableDoneButton();
+            });
+            
+            disableDoneButton();
+        }
+        
+        function disableDoneButton() {
+            doneBtn.disabled = true;
+            doneBtn.className = "w-full bg-gray-600 text-gray-400 font-bold text-xl py-5 px-6 rounded-xl border-2 border-gray-600 cursor-not-allowed";
+        }
+        
+        function enableDoneButton() {
+            doneBtn.disabled = false;
+            doneBtn.className = originalDoneBtnClasses;
+        }
+
+
+        function startTimer(duration, onComplete) {
+            clearInterval(timerInterval);
+            secondsLeft = duration;
+            timerDisplay.textContent = secondsLeft;
+            updateCircleDashoffset(duration, secondsLeft);
+
+            timerInterval = setInterval(() => {
+                secondsLeft--;
+                timerDisplay.textContent = secondsLeft;
+                updateCircleDashoffset(duration, secondsLeft);
+
+                if (secondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerDisplay.textContent = "GO!";
+                    new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjQwLjEwMQAAAAlJbmb+ सिनोनाAAAExBTUUzLjk5LjVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAB/8ANgAADIABEhAZGZ23sYSAw8dAAAAAElFTkSuQmCC').play();
+                    if (onComplete) {
+                        onComplete();
+                    }
+                }
+            }, 1000);
+        }
+
+        function finishWorkout() {
+            clearInterval(totalTimerInterval);
+            workoutScreen.classList.add('hidden');
+            completeScreen.classList.remove('hidden');
+        }
+
+        function resetApp() {
+            clearInterval(timerInterval);
+            clearInterval(totalTimerInterval);
+            document.getElementById('total-timer-container').classList.remove('text-red-500');
+            updateChallengeInfo(); // Recalculate default reps
+            completeScreen.classList.add('hidden');
+            workoutScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+        }
+
+        function updateRepDisplay() {
+            currentRepsDisplay.textContent = currentReps;
+        }
+
+        function calculateTimeFraction(totalTime, timeLeft) {
+            if (totalTime === 0) return 0;
+            const rawFraction = timeLeft / totalTime;
+            return rawFraction - (1 / totalTime) * (1 - rawFraction);
+        }
+
+        function updateCircleDashoffset(duration, timeLeft) {
+            const circleFraction = calculateTimeFraction(duration, timeLeft);
+            const offset = circleFraction * FULL_DASH_ARRAY;
+            timerProgress.style.strokeDashoffset = offset;
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            const formattedSeconds = remainingSeconds < 10 ? '0' + remainingSeconds : remainingSeconds;
+            return `${minutes}:${formattedSeconds}`;
+        }
+
+        function startTotalTimer() {
+            let timeLeft = 600; // 10 minutes
+            totalTimerDisplay.textContent = formatTime(timeLeft);
+            const container = document.getElementById('total-timer-container');
+            container.querySelector('p:first-child').classList.remove('text-red-500');
+            totalTimerDisplay.classList.remove('text-red-500');
+
+            totalTimerInterval = setInterval(() => {
+                timeLeft--;
+                totalTimerDisplay.textContent = formatTime(timeLeft);
+
+                if (timeLeft <= 0) {
+                    clearInterval(totalTimerInterval);
+                    totalTimerDisplay.textContent = "Time's Up!";
+                    container.querySelector('p:first-child').classList.add('text-red-500');
+                    totalTimerDisplay.classList.add('text-red-500');
+                }
+            }, 1000);
+        }
+
+    </script>
+</body>
+</html>
+
+
