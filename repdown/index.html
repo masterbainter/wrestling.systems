@@ -229,7 +229,7 @@
                     apiKey: "AIzaSyASn9xe5RRKFGXNi-Vha-NunDYj1mv7D3g",
                     authDomain: "wrestlingsystems.firebaseapp.com",
                     projectId: "wrestlingsystems",
-                    storageBucket: "wrestlingsystems.appspot.com",
+                    storageBucket: "wrestlingsystems.firebasestorage.app",
                     messagingSenderId: "255692661115",
                     appId: "1:255692661115:web:7ad4f8d39b78fb1220ddde",
                     measurementId: "G-E52GDENT1E"
@@ -259,11 +259,21 @@
                         // No user is signed in.
                         console.log("No user is signed in.");
                         loaderContainer.innerHTML = `
-                            <p class="text-xl text-amber-400 text-center">
-                                Please sign in to your<br>
-                                <span class="font-bold">wrestling.systems</span><br>
-                                account to use this app.
-                            </p>`;
+                            <div>
+                                <p class="text-xl text-amber-400 text-center">
+                                    Please sign in to your<br>
+                                    <span class="font-bold">wrestling.systems</span><br>
+                                    account to use this app.
+                                </p>
+                                <div class="mt-6 flex flex-col sm:flex-row gap-4">
+                                    <a href="https://wrestling.systems/login" target="_blank" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-lg py-3 px-6 rounded-xl border-2 border-amber-400 btn-glow">
+                                        Sign In
+                                    </a>
+                                    <a href="https://wrestling.systems/register" target="_blank" class="w-full bg-amber-400 hover:bg-amber-300 text-black font-bold text-lg py-3 px-6 rounded-xl border-2 border-amber-400 btn-glow">
+                                        Register
+                                    </a>
+                                </div>
+                            </div>`;
                     }
                 });
             } catch (error) {
@@ -803,5 +813,6 @@
     </script>
 </body>
 </html>
+
 
 
