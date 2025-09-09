@@ -38,18 +38,38 @@
             text-decoration: line-through;
             color: #6b7280; /* gray-500 */
         }
+        #loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #ca8a04;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-black text-gray-200 flex items-center justify-center min-h-screen p-4">
 
     <div id="app-container" class="w-full max-w-md mx-auto p-4 sm:p-6 text-center bg-gray-900/80 backdrop-blur-sm rounded-2xl border-2 container-glow">
+        
+        <div id="loader-container" class="flex flex-col items-center justify-center">
+            <div id="loader"></div>
+            <p class="mt-4 text-amber-400">Connecting to wrestling.systems...</p>
+        </div>
 
         <!-- Setup Screen -->
-        <div id="setup-screen">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-amber-400 mb-4 text-glow">Rep Down</h1>
+        <div id="setup-screen" class="hidden">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-amber-400 mb-2 text-glow">Rep Down</h1>
+            <p id="retry-info" class="text-cyan-400 text-lg my-2 hidden"></p>
+            <p id="current-date" class="text-gray-400 text-lg mb-2"></p>
             <p id="challenge-day-info" class="text-amber-400 font-bold text-2xl mb-4 text-glow"></p>
             
             <div class="bg-black/50 p-6 rounded-xl">
+                 <p id="recommended-reps" class="text-gray-300 text-lg mb-6"></p>
                 <div class="mb-6">
                     <label class="block text-lg font-semibold mb-3 text-gray-300">Select Your Exercises</label>
                     <div id="exercise-selection" class="space-y-3 text-left w-fit mx-auto">
@@ -65,6 +85,14 @@
                             <input id="vups-check" type="checkbox" checked value="V-ups" class="w-5 h-5 text-amber-400 bg-gray-700 border-gray-600 rounded focus:ring-amber-500 focus:ring-2">
                             <label for="vups-check" class="ml-3 text-lg font-medium text-gray-300">V-ups</label>
                         </div>
+                    </div>
+                    <div id="add-exercise-container" class="mt-4">
+                        <button id="add-exercise-btn" class="text-cyan-400 hover:text-cyan-300 font-semibold">+ Add Exercise</button>
+                        <div id="new-exercise-form" class="hidden mt-2 flex gap-2">
+                            <input type="text" id="new-exercise-input" placeholder="Exercise Name" class="w-full bg-gray-800 text-white text-md text-center font-bold p-2 rounded-lg border-2 border-gray-600 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none">
+                            <button id="save-exercise-btn" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg">Save</button>
+                        </div>
+                        <p id="add-exercise-limit-msg" class="text-gray-500 text-sm mt-2 hidden">You can add up to 2 custom exercises.</p>
                     </div>
                     <p id="exercise-error" class="text-red-500 text-sm mt-2 hidden">Please select at least one exercise.</p>
                 </div>
@@ -93,99 +121,261 @@
 
             <div id="exercise-list" class="my-6 bg-black/50 p-4 sm:p-6 rounded-xl">
                  <h3 class="text-2xl font-bold text-amber-400 mb-4 text-glow">Complete Your Reps:</h3>
-                 <div id="dynamic-exercise-list" class="space-y-3">
+                 <div id="dynamic-exercise-list" class="space-y-4">
                     <!-- Dynamic content will be injected here -->
                  </div>
             </div>
 
-            <button id="done-btn" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-5 px-6 rounded-xl border-2 border-amber-400 btn-glow" disabled>
+            <button id="done-btn" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-5 px-6 rounded-xl border-2 border-amber-400 btn-glow">
                 Start Next Round
+            </button>
+            <button id="end-btn" class="w-full mt-4 bg-transparent hover:bg-red-600 text-red-500 hover:text-white font-semibold text-md py-2 px-6 rounded-xl border-2 border-red-500">
+                End Workout
             </button>
         </div>
 
         <!-- Completion Screen -->
         <div id="complete-screen" class="hidden">
-            <h1 class="text-5xl font-extrabold text-amber-400 mb-4 text-glow">Well Done!</h1>
-            <p class="text-gray-400 text-xl mb-8">You crushed the challenge. Time to recover.</p>
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-amber-400 mx-auto mb-8" viewBox="0 0 20 20" fill="currentColor">
+            <h1 id="complete-title" class="text-5xl font-extrabold text-amber-400 mb-4 text-glow">Well Done!</h1>
+            <p class="text-gray-400 text-xl mb-6">You crushed the challenge. Time to recover.</p>
+            <p id="total-reps-info" class="text-amber-400 text-2xl font-bold mb-2 text-glow"></p>
+            <p id="total-missed-reps-info" class="text-red-500 text-lg font-bold mb-2 text-glow hidden"></p>
+            <p id="beast-mode-info" class="text-cyan-400 text-2xl font-bold mb-4 text-glow hidden"></p>
+             <svg id="complete-icon" xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-amber-400 mx-auto mb-8" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
+            <div id="round-summary-container" class="my-6 text-left max-h-60 overflow-y-auto bg-black/50 p-4 rounded-xl">
+                <h3 class="text-xl font-bold text-amber-400 mb-3 text-center text-glow">Round Summary</h3>
+                <div id="round-summary-list"></div>
+            </div>
             <button id="restart-btn" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black font-bold text-xl py-4 px-6 rounded-xl border-2 border-amber-400 btn-glow">
                 New Workout
             </button>
+            <button id="download-csv-btn" class="w-full mt-4 bg-transparent hover:bg-green-600 text-green-500 hover:text-white font-bold text-xl py-4 px-6 rounded-xl border-2 border-green-500 btn-glow hidden">
+                Download Summary (CSV)
+            </button>
+            <button id="retry-btn" class="w-full mt-4 bg-transparent hover:bg-cyan-500 text-cyan-400 hover:text-black font-bold text-xl py-4 px-6 rounded-xl border-2 border-cyan-400 btn-glow hidden">
+                Retry Workout
+            </button>
         </div>
-
+        <p id="user-id-display" class="text-xs text-gray-600 mt-4 text-center break-all"></p>
     </div>
 
-    <script>
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         // DOM Elements
         const setupScreen = document.getElementById('setup-screen');
         const workoutScreen = document.getElementById('workout-screen');
         const completeScreen = document.getElementById('complete-screen');
-
+        const loaderContainer = document.getElementById('loader-container');
+        
         const repsInput = document.getElementById('reps-input');
         const startBtn = document.getElementById('start-btn');
         const doneBtn = document.getElementById('done-btn');
         const restartBtn = document.getElementById('restart-btn');
+        const endBtn = document.getElementById('end-btn');
+        const downloadCsvBtn = document.getElementById('download-csv-btn');
+        const retryBtn = document.getElementById('retry-btn');
         
         const repsError = document.getElementById('reps-error');
         const exerciseError = document.getElementById('exercise-error');
-        const exerciseCheckboxes = document.querySelectorAll('#exercise-selection input[type="checkbox"]');
+        const exerciseSelection = document.getElementById('exercise-selection');
         const dynamicExerciseList = document.getElementById('dynamic-exercise-list');
 
-        const currentRepsDisplay = document.getElementById('current-reps');
+        const addExerciseBtn = document.getElementById('add-exercise-btn');
+        const newExerciseForm = document.getElementById('new-exercise-form');
+        const newExerciseInput = document.getElementById('new-exercise-input');
+        const saveExerciseBtn = document.getElementById('save-exercise-btn');
+        const addExerciseLimitMsg = document.getElementById('add-exercise-limit-msg');
+
+        const currentRpsDisplay = document.getElementById('current-reps');
         const totalTimerDisplay = document.getElementById('total-timer');
         const challengeDayInfo = document.getElementById('challenge-day-info');
+        const currentDateDisplay = document.getElementById('current-date');
+        const recommendedRepsDisplay = document.getElementById('recommended-reps');
+        const retryInfoDisplay = document.getElementById('retry-info');
+        const roundSummaryList = document.getElementById('round-summary-list');
+        const userIdDisplay = document.getElementById('user-id-display');
         
         // App State
         let startingReps = 10;
         let currentReps = 10;
         let totalTimerInterval;
         let selectedExercises = [];
+        let exerciseStates = {};
+        let totalRepsCompleted = 0;
+        let missedRepsByExercise = {};
+        let recommendedReps = 0;
+        let totalRecommendedReps = 0;
+        let previousAttemptCompleted = 0;
+        let previousAttemptMissedByExercise = {};
+        let roundStartTime;
+        let roundTimes = [];
+        let customExercisesAdded = 0;
+
+        // Firebase State
+        let app, auth, db, userId;
+        const appId = "rep-down-challenge"; // A unique identifier for this app's data
+
+        // --- Firebase Initialization ---
+        async function initFirebase() {
+            try {
+                // IMPORTANT: This is now your actual Firebase project configuration
+                const firebaseConfig = {
+                    apiKey: "AIzaSyASn9xe5RRKFGXNi-Vha-NunDYj1mv7D3g",
+                    authDomain: "wrestlingsystems.firebaseapp.com",
+                    projectId: "wrestlingsystems",
+                    storageBucket: "wrestlingsystems.appspot.com",
+                    messagingSenderId: "255692661115",
+                    appId: "1:255692661115:web:7ad4f8d39b78fb1220ddde",
+                    measurementId: "G-E52GDENT1E"
+                };
+
+                // Check if the config has been filled out
+                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                    loaderContainer.innerHTML = '<p class="text-red-500 text-lg">Firebase is not configured. Please add your project details in the script.</p>';
+                    return;
+                }
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('debug');
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        // User is signed in from wrestling.systems
+                        console.log("User is signed in:", user.uid);
+                        userId = user.uid;
+                        userIdDisplay.textContent = `User ID: ${userId}`;
+                        await fetchLastWorkout();
+                        loaderContainer.classList.add('hidden');
+                        setupScreen.classList.remove('hidden');
+                    } else {
+                        // No user is signed in.
+                        console.log("No user is signed in.");
+                        loaderContainer.innerHTML = `
+                            <p class="text-xl text-amber-400 text-center">
+                                Please sign in to your<br>
+                                <span class="font-bold">wrestling.systems</span><br>
+                                account to use this app.
+                            </p>`;
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                loaderContainer.innerHTML = '<p class="text-red-500">Error connecting to server. Please refresh.</p>';
+            }
+        }
+
+        async function fetchLastWorkout() {
+            if (!userId) return;
+            try {
+                // The path now includes the unique appId to separate it from other apps in the same project
+                const workoutsRef = collection(db, `artifacts/${appId}/users/${userId}/workouts`);
+                const q = query(workoutsRef, orderBy("createdAt", "desc"), limit(1));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const lastWorkout = querySnapshot.docs[0].data();
+                    if (lastWorkout.status === 'incomplete') {
+                        previousAttemptCompleted = lastWorkout.totalRepsCompleted || 0;
+                        previousAttemptMissedByExercise = lastWorkout.missedRepsByExercise || {};
+                        
+                        if (previousAttemptCompleted > 0) {
+                             retryInfoDisplay.textContent = `Found an incomplete workout! ${previousAttemptCompleted} reps will be added when you retry.`;
+                             retryInfoDisplay.classList.remove('hidden');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching last workout:", error);
+            }
+        }
+
+        async function saveWorkoutData(status) {
+            if (!userId) return;
+            try {
+                const workoutData = {
+                    status: status,
+                    createdAt: serverTimestamp(),
+                    startingReps: startingReps,
+                    selectedExercises: selectedExercises,
+                    roundTimes: roundTimes,
+                    totalRepsCompleted: totalRepsCompleted,
+                    missedRepsByExercise: missedRepsByExercise,
+                    previousAttemptCompleted: previousAttemptCompleted,
+                    previousAttemptMissedByExercise: previousAttemptMissedByExercise
+                };
+                await addDoc(collection(db, `artifacts/${appId}/users/${userId}/workouts`), workoutData);
+                console.log("Workout data saved successfully.");
+            } catch (error)
+            {
+                console.error("Error saving workout data:", error);
+            }
+        }
+
+        // --- Helper Functions ---
+        function sumOfN(n) {
+            if (n <= 0) return 0;
+            return n * (n + 1) / 2;
+        }
+
+        function formatRoundTime(seconds) {
+            if (seconds < 60) return `${Math.floor(seconds)}s`;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}m ${remainingSeconds}s`;
+        }
         
-        // Event Listeners
-        startBtn.addEventListener('click', startWorkout);
-        doneBtn.addEventListener('click', completeRound);
-        restartBtn.addEventListener('click', resetApp);
-        repsInput.addEventListener('change', () => {
-             if(parseInt(repsInput.value) < 1) repsInput.value = 1;
-             if(parseInt(repsInput.value) > 100) repsInput.value = 100;
-        });
-        window.addEventListener('DOMContentLoaded', updateChallengeInfo);
+        function getFinalTotals() {
+            const finalCompleted = totalRepsCompleted + previousAttemptCompleted;
 
-        // --- Core Functions ---
+            const finalMissedByExercise = { ...previousAttemptMissedByExercise };
+            Object.keys(missedRepsByExercise).forEach(ex => {
+                finalMissedByExercise[ex] = (finalMissedByExercise[ex] || 0) + missedRepsByExercise[ex];
+            });
+            
+            const totalFinalMissed = Object.values(finalMissedByExercise).reduce((sum, count) => sum + count, 0);
 
+            const beastModeReps = finalCompleted - totalRecommendedReps;
+
+            return { finalCompleted, finalMissedByExercise, totalFinalMissed, beastModeReps };
+        }
+
+        // --- Core App Logic ---
         function updateChallengeInfo() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-
+            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+            currentDateDisplay.textContent = `Today is ${today.toLocaleDateString(undefined, dateOptions)}.`;
             const currentYear = today.getFullYear();
-            const startDate = new Date(currentYear, 8, 10); 
+            const startDate = new Date(currentYear, 8, 10);
             startDate.setHours(0, 0, 0, 0);
-
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 19);
-
+            let defaultReps = 10;
             if (today < startDate) {
                 challengeDayInfo.textContent = `Challenge starts on 09/10.`;
-                repsInput.value = 10;
             } else if (today > endDate) {
                 challengeDayInfo.textContent = `The 20-Day Challenge has ended.`;
-                repsInput.value = 10;
             } else {
                 const timeDiff = today.getTime() - startDate.getTime();
                 const dayNumber = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
-                const defaultReps = 10 + (dayNumber - 1);
-
+                defaultReps = 10 + (dayNumber - 1);
                 challengeDayInfo.textContent = `Day ${dayNumber} of 20`;
-                repsInput.value = defaultReps;
             }
+            recommendedReps = defaultReps;
+            repsInput.value = defaultReps;
+            recommendedRepsDisplay.textContent = `Recommended start for today: ${recommendedReps} reps.`;
         }
 
         function validateInputs() {
             let isValid = true;
-            
-            // Validate Reps
             const reps = parseInt(repsInput.value);
             if (isNaN(reps) || reps < 1 || reps > 100) {
                 repsError.classList.remove('hidden');
@@ -193,31 +383,34 @@
             } else {
                 repsError.classList.add('hidden');
             }
-
-            // Validate Exercise Selection
-            selectedExercises = Array.from(exerciseCheckboxes)
-                                   .filter(cb => cb.checked)
-                                   .map(cb => cb.value);
+            const allCheckboxes = document.querySelectorAll('#exercise-selection input[type="checkbox"]');
+            selectedExercises = Array.from(allCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
             if (selectedExercises.length === 0) {
                 exerciseError.classList.remove('hidden');
                 isValid = false;
             } else {
                 exerciseError.classList.add('hidden');
             }
-
             return isValid;
         }
 
         function startWorkout() {
             if (!validateInputs()) return;
-
             startingReps = parseInt(repsInput.value);
             currentReps = startingReps;
-            
+            totalRepsCompleted = 0;
+            missedRepsByExercise = {};
+            roundTimes = [];
+            totalRecommendedReps = sumOfN(recommendedReps) * selectedExercises.length;
+            exerciseStates = {};
+            selectedExercises.forEach(name => {
+                exerciseStates[name] = startingReps;
+                missedRepsByExercise[name] = 0;
+            });
             updateRepDisplay();
             buildExerciseTrackers();
             startTotalTimer();
-
+            updateDoneButtonText();
             setupScreen.classList.add('hidden');
             workoutScreen.classList.remove('hidden');
             completeScreen.classList.add('hidden');
@@ -226,77 +419,265 @@
         function buildExerciseTrackers() {
             dynamicExerciseList.innerHTML = '';
             selectedExercises.forEach(exerciseName => {
+                const exerciseReps = exerciseStates[exerciseName];
+                const isOnTarget = exerciseReps === currentReps;
+                const repsBehind = exerciseReps - currentReps;
                 const item = document.createElement('div');
-                item.className = 'exercise-item flex items-center justify-between bg-gray-800 p-3 rounded-lg';
+                item.className = 'exercise-item text-left bg-gray-800 p-3 rounded-lg';
+                item.dataset.name = exerciseName;
                 item.dataset.completed = 'false';
-
-                const nameEl = document.createElement('span');
-                nameEl.className = 'exercise-name text-lg font-medium text-gray-300';
-                nameEl.textContent = exerciseName;
-
-                const buttonEl = document.createElement('button');
-                buttonEl.className = 'complete-exercise-btn bg-gray-600 hover:bg-amber-500 text-white font-bold py-2 px-4 rounded-md transition-colors';
-                buttonEl.textContent = 'Done';
-                buttonEl.onclick = () => markExerciseComplete(item, buttonEl);
-
-                item.appendChild(nameEl);
-                item.appendChild(buttonEl);
+                let statusHTML = isOnTarget ? `<span class="text-green-400 font-semibold">On Target</span>` : `<span class="text-yellow-400 font-semibold">You're on ${exerciseReps}, catch up!</span>`;
+                let buttonClasses = '';
+                if (isOnTarget) buttonClasses = 'bg-amber-400 hover:bg-amber-300 text-black';
+                else if (repsBehind > 0 && repsBehind <= 3) buttonClasses = 'bg-amber-600 hover:bg-amber-500 text-black';
+                else if (repsBehind > 3) buttonClasses = 'bg-red-600 hover:bg-red-500 text-white';
+                item.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="exercise-name text-lg font-medium text-gray-300 block">${exerciseName}</span>
+                            <span class="exercise-status text-sm">${statusHTML}</span>
+                        </div>
+                        <button class="complete-exercise-btn ${buttonClasses} font-bold py-2 px-4 rounded-md transition-colors">Done</button>
+                    </div>`;
                 dynamicExerciseList.appendChild(item);
+                item.querySelector('.complete-exercise-btn').onclick = () => markExerciseComplete(item);
             });
-            doneBtn.disabled = true;
-        }
-        
-        function markExerciseComplete(item, button) {
-            item.dataset.completed = 'true';
-            button.disabled = true;
-            button.textContent = '✔';
-            button.classList.remove('bg-gray-600', 'hover:bg-amber-500');
-            button.classList.add('bg-green-600');
-            checkIfRoundIsComplete();
         }
 
-        function checkIfRoundIsComplete() {
-            const allItems = dynamicExerciseList.querySelectorAll('.exercise-item');
-            const allCompleted = Array.from(allItems).every(item => item.dataset.completed === 'true');
-            if (allCompleted) {
-                doneBtn.disabled = false;
+        function updateSingleExerciseTracker(item) {
+            const exerciseName = item.dataset.name;
+            const exerciseReps = exerciseStates[exerciseName];
+            const isOnTarget = exerciseReps === currentReps;
+            const repsBehind = exerciseReps - currentReps;
+            item.querySelector('.exercise-status').innerHTML = isOnTarget ? `<span class="text-green-400 font-semibold">On Target</span>` : `<span class="text-yellow-400 font-semibold">You're on ${exerciseReps}, catch up!</span>`;
+            const button = item.querySelector('.complete-exercise-btn');
+            button.classList.remove('bg-amber-400', 'hover:bg-amber-300', 'text-black', 'bg-amber-600', 'hover:bg-amber-500', 'bg-red-600', 'hover:bg-red-500', 'text-white');
+            if (isOnTarget) button.classList.add('bg-amber-400', 'hover:bg-amber-300', 'text-black');
+            else if (repsBehind > 0 && repsBehind <= 3) button.classList.add('bg-amber-600', 'hover:bg-amber-500', 'text-black');
+            else if (repsBehind > 3) button.classList.add('bg-red-600', 'hover:bg-red-500', 'text-white');
+        }
+
+        function markExerciseComplete(item) {
+            const name = item.dataset.name;
+            const exerciseReps = exerciseStates[name];
+            if (exerciseReps > currentReps) {
+                exerciseStates[name]--;
+                totalRepsCompleted++;
+                updateSingleExerciseTracker(item);
+            } else if (exerciseReps === currentReps) {
+                item.dataset.completed = 'true';
+                const button = item.querySelector('.complete-exercise-btn');
+                button.disabled = true;
+                button.textContent = '✔';
+                button.classList.remove('bg-amber-400', 'hover:bg-amber-300', 'text-black', 'bg-amber-600', 'hover:bg-amber-500', 'bg-red-600', 'hover:bg-red-500', 'text-white');
+                button.classList.add('bg-green-600', 'text-white');
             }
         }
 
         function completeRound() {
+            const roundEndTime = Date.now();
+            const timeTaken = (roundEndTime - roundStartTime) / 1000;
+            const exerciseItems = dynamicExerciseList.querySelectorAll('.exercise-item');
+            const allDone = Array.from(exerciseItems).every(item => item.dataset.completed === 'true');
+            const missedRepsInRound = {};
+            exerciseItems.forEach(item => {
+                if (item.dataset.completed !== 'true') missedRepsInRound[item.dataset.name] = exerciseStates[item.dataset.name];
+            });
+            roundTimes.push({ roundNumber: currentReps, timeTaken: timeTaken, status: allDone ? 'Completed' : 'Started Early', missedReps: missedRepsInRound });
+            exerciseItems.forEach(item => {
+                const name = item.dataset.name;
+                const isCompletedThisRound = item.dataset.completed === 'true';
+                const repsForThisExercise = exerciseStates[name];
+                if (isCompletedThisRound) {
+                    totalRepsCompleted += repsForThisExercise;
+                    exerciseStates[name] = currentReps - 1;
+                } else {
+                    missedRepsByExercise[name] += repsForThisExercise;
+                }
+            });
             currentReps--;
-            
             if (currentReps <= 0) {
                 finishWorkout();
                 return;
             }
-            
             updateRepDisplay();
-            buildExerciseTrackers(); // Rebuild for next round
-            startTotalTimer(); // Reset and start the timer
+            buildExerciseTrackers();
+            startTotalTimer();
+            updateDoneButtonText();
         }
-        
-        function finishWorkout() {
+
+        function endWorkout() {
             clearInterval(totalTimerInterval);
+            const roundEndTime = Date.now();
+            const timeTaken = (roundEndTime - roundStartTime) / 1000;
+            const exerciseItems = dynamicExerciseList.querySelectorAll('.exercise-item');
+            const missedRepsInRound = {};
+            exerciseItems.forEach(item => {
+                if (item.dataset.completed !== 'true') missedRepsInRound[item.dataset.name] = exerciseStates[item.dataset.name];
+            });
+            roundTimes.push({ roundNumber: currentReps, timeTaken: timeTaken, status: 'Ended Early', missedReps: missedRepsInRound });
+            exerciseItems.forEach(item => {
+                const name = item.dataset.name;
+                const isCompletedThisRound = item.dataset.completed === 'true';
+                if (!isCompletedThisRound) missedRepsByExercise[name] += exerciseStates[name];
+                else totalRepsCompleted += exerciseStates[name];
+            });
+            if (currentReps > 1) {
+                const repsInFutureRounds = sumOfN(currentReps - 1);
+                selectedExercises.forEach(name => {
+                    missedRepsByExercise[name] += repsInFutureRounds;
+                });
+            }
+            showIncompleteScreen();
+            saveWorkoutData('incomplete');
+        }
+
+        function displayRoundSummary() {
+            roundSummaryList.innerHTML = '';
+            if (roundTimes.length === 0) return;
+            roundTimes.forEach(round => {
+                const statusColor = round.status === 'Completed' ? 'text-green-400' : (round.status === 'Started Early' ? 'text-yellow-400' : 'text-red-500');
+                const summaryItem = document.createElement('div');
+                summaryItem.className = 'text-gray-300 py-2 border-b border-gray-700/50';
+                let missedRepsHTML = '';
+                const missedEntries = Object.entries(round.missedReps || {});
+                if (missedEntries.length > 0) {
+                    const missedContent = missedEntries.map(([exercise, reps]) => `<span>- Missed ${reps} ${exercise}</span>`).join('<br>');
+                    missedRepsHTML = `<div class="text-sm text-red-400 pl-4 pt-1">${missedContent}</div>`;
+                }
+                summaryItem.innerHTML = `<div class="flex justify-between items-center"><span>Round <span class="font-bold text-amber-400">${round.roundNumber}</span></span><span class="font-semibold">${formatRoundTime(round.timeTaken)}</span><span class="font-bold ${statusColor}">${round.status}</span></div>${missedRepsHTML}`;
+                roundSummaryList.appendChild(summaryItem);
+            });
+        }
+
+        function downloadCSV() {
+            if (roundTimes.length === 0) return;
+            let csvContent = "Round,Time Taken (seconds),Status\n";
+            roundTimes.forEach(round => {
+                csvContent += `${round.roundNumber},${round.timeTaken.toFixed(2)},"${round.status}"\n`;
+            });
+            csvContent += "\nMetric,Value\n";
+            const { finalCompleted, finalMissedByExercise, beastModeReps } = getFinalTotals();
+            csvContent += `Total Reps Completed,${finalCompleted}\n`;
+            for (const [exercise, count] of Object.entries(finalMissedByExercise)) {
+                if (count > 0) csvContent += `Missed ${exercise} Reps,${count}\n`;
+            }
+            if (beastModeReps > 0) csvContent += `Beast Mode Reps,${beastModeReps}\n`;
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                const today = new Date();
+                const dateString = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+                link.setAttribute("href", url);
+                link.setAttribute("download", `rep_down_summary_${dateString}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function showIncompleteScreen() {
             document.title = 'Rep Down';
+            const { finalCompleted, totalFinalMissed } = getFinalTotals();
+            document.getElementById('complete-title').textContent = "Workout Incomplete";
+            document.getElementById('total-reps-info').textContent = `Total Reps Completed: ${finalCompleted}`;
+            const totalMissedRepsInfo = document.getElementById('total-missed-reps-info');
+            if (totalFinalMissed > 0) {
+                totalMissedRepsInfo.textContent = `Total Reps Missed: ${totalFinalMissed}`;
+                totalMissedRepsInfo.classList.remove('hidden');
+            } else {
+                totalMissedRepsInfo.classList.add('hidden');
+            }
+            document.getElementById('beast-mode-info').classList.add('hidden');
+            restartBtn.classList.remove('hidden');
+            retryBtn.classList.remove('hidden');
+            downloadCsvBtn.classList.remove('hidden');
+            document.getElementById('complete-icon').classList.add('text-red-500');
+            document.getElementById('complete-icon').classList.remove('text-amber-400');
+            displayRoundSummary();
             workoutScreen.classList.add('hidden');
             completeScreen.classList.remove('hidden');
         }
-        
+
+        function retryWorkout() {
+            // This function is now just for carrying over reps from a workout just ended in the same session.
+            // Firebase handles the cross-device/cross-session retries.
+            previousAttemptCompleted += totalRepsCompleted;
+            Object.keys(missedRepsByExercise).forEach(ex => {
+                previousAttemptMissedByExercise[ex] = (previousAttemptMissedByExercise[ex] || 0) + missedRepsByExercise[ex];
+            });
+            roundTimes = [];
+            resetApp();
+        }
+
+        function finishWorkout() {
+            clearInterval(totalTimerInterval);
+            document.title = 'Rep Down';
+            const { finalCompleted, totalFinalMissed, beastModeReps } = getFinalTotals();
+            document.getElementById('complete-title').textContent = "Well Done!";
+            document.getElementById('total-reps-info').textContent = `Total Reps Completed: ${finalCompleted}`;
+            const totalMissedRepsInfo = document.getElementById('total-missed-reps-info');
+            if (totalFinalMissed > 0) {
+                totalMissedRepsInfo.textContent = `Total Reps Missed: ${totalFinalMissed}`;
+                totalMissedRepsInfo.classList.remove('hidden');
+            } else {
+                totalMissedRepsInfo.classList.add('hidden');
+            }
+            const beastModeInfo = document.getElementById('beast-mode-info');
+            if (beastModeReps > 0) {
+                beastModeInfo.textContent = `Beast Mode: ${beastModeReps} extra reps!`;
+                beastModeInfo.classList.remove('hidden');
+            } else {
+                beastModeInfo.classList.add('hidden');
+            }
+            restartBtn.classList.remove('hidden');
+            if (totalFinalMissed > 0) retryBtn.classList.remove('hidden');
+            else retryBtn.classList.add('hidden');
+            downloadCsvBtn.classList.remove('hidden');
+            document.getElementById('complete-icon').classList.remove('text-red-500');
+            document.getElementById('complete-icon').classList.add('text-amber-400');
+            displayRoundSummary();
+            workoutScreen.classList.add('hidden');
+            completeScreen.classList.remove('hidden');
+            saveWorkoutData('completed');
+        }
+
         function resetApp() {
             clearInterval(totalTimerInterval);
             document.title = 'Rep Down';
             document.getElementById('total-timer-container').classList.remove('text-red-500');
+            if (previousAttemptCompleted > 0) {
+                retryInfoDisplay.textContent = `${previousAttemptCompleted} reps from your last attempt will be added.`;
+                retryInfoDisplay.classList.remove('hidden');
+            } else {
+                retryInfoDisplay.classList.add('hidden');
+            }
+            downloadCsvBtn.classList.add('hidden');
             updateChallengeInfo();
             completeScreen.classList.add('hidden');
             workoutScreen.classList.add('hidden');
             setupScreen.classList.remove('hidden');
             repsError.classList.add('hidden');
             exerciseError.classList.add('hidden');
+            doneBtn.textContent = 'Start Next Round';
+
+            // Reset custom exercises
+            customExercisesAdded = 0;
+            document.querySelectorAll('.custom-exercise-item').forEach(el => el.remove());
+            addExerciseBtn.classList.remove('hidden');
+            addExerciseLimitMsg.classList.add('hidden');
+            newExerciseForm.classList.add('hidden');
+            newExerciseInput.value = '';
         }
 
         function updateRepDisplay() {
-            currentRepsDisplay.textContent = currentReps;
+            currentRpsDisplay.textContent = currentReps;
+        }
+
+        function updateDoneButtonText() {
+            doneBtn.textContent = currentReps === 1 ? "I'm Done!" : "Start Next Round";
         }
 
         function formatTime(seconds) {
@@ -308,29 +689,119 @@
 
         function startTotalTimer() {
             clearInterval(totalTimerInterval);
-
+            roundStartTime = Date.now();
             let timeLeft = 600; // 10 minutes
+            let isOvertime = false;
             totalTimerDisplay.textContent = formatTime(timeLeft);
             document.title = `${formatTime(timeLeft)} - Rep Down`;
             const container = document.getElementById('total-timer-container');
-            container.querySelector('p:first-child').classList.remove('text-red-500');
+            const timerLabel = container.querySelector('p:first-child');
+            timerLabel.textContent = "Time Remaining for this Round";
+            timerLabel.classList.remove('text-red-500');
             totalTimerDisplay.classList.remove('text-red-500');
             totalTimerInterval = setInterval(() => {
                 timeLeft--;
-                const formattedTime = formatTime(timeLeft);
-                totalTimerDisplay.textContent = formattedTime;
-                document.title = `${formattedTime} - Rep Down`;
-
-                if (timeLeft <= 0) {
-                    clearInterval(totalTimerInterval);
-                    totalTimerDisplay.textContent = "Time's Up!";
-                    document.title = "Time's Up! - Rep Down";
-                    container.querySelector('p:first-child').classList.add('text-red-500');
-                    totalTimerDisplay.classList.add('text-red-500');
+                if (timeLeft >= 0) {
+                    const formattedTime = formatTime(timeLeft);
+                    totalTimerDisplay.textContent = formattedTime;
+                    document.title = `${formattedTime} - Rep Down`;
+                } else {
+                    if (!isOvertime) {
+                        isOvertime = true;
+                        timerLabel.textContent = "Finish Your Reps!";
+                        timerLabel.classList.add('text-red-500');
+                        totalTimerDisplay.classList.add('text-red-500');
+                    }
+                    const overtime = Math.abs(timeLeft);
+                    const formattedOvertime = `+${formatTime(overtime)}`;
+                    totalTimerDisplay.textContent = formattedOvertime;
+                    document.title = `${formattedOvertime} - Rep Down`;
                 }
             }, 1000);
         }
 
+        function handleAddNewExercise() {
+            const exerciseName = newExerciseInput.value.trim();
+            if (exerciseName === '') {
+                // Using a more subtle error message than alert()
+                newExerciseInput.classList.add('border-red-500');
+                newExerciseInput.placeholder = "Name can't be empty";
+                setTimeout(() => {
+                    newExerciseInput.classList.remove('border-red-500');
+                    newExerciseInput.placeholder = "Exercise Name";
+                }, 2000);
+                return;
+            }
+
+            // Check for duplicates
+            const allCheckboxes = document.querySelectorAll('#exercise-selection input[type="checkbox"]');
+            const isDuplicate = Array.from(allCheckboxes).some(cb => cb.value.toLowerCase() === exerciseName.toLowerCase());
+            if (isDuplicate) {
+                newExerciseInput.value = '';
+                newExerciseInput.classList.add('border-red-500');
+                newExerciseInput.placeholder = "Already exists!";
+                 setTimeout(() => {
+                    newExerciseInput.classList.remove('border-red-500');
+                    newExerciseInput.placeholder = "Exercise Name";
+                }, 2000);
+                return;
+            }
+
+            const newId = `custom-${exerciseName.replace(/\s+/g, '-').toLowerCase()}`;
+            
+            const newExerciseEl = document.createElement('div');
+            newExerciseEl.className = 'flex items-center custom-exercise-item';
+            
+            newExerciseEl.innerHTML = `
+                <input id="${newId}" type="checkbox" checked value="${exerciseName}" class="w-5 h-5 text-amber-400 bg-gray-700 border-gray-600 rounded focus:ring-amber-500 focus:ring-2">
+                <label for="${newId}" class="ml-3 text-lg font-medium text-gray-300">${exerciseName}</label>
+            `;
+            exerciseSelection.appendChild(newExerciseEl);
+
+            customExercisesAdded++;
+            newExerciseInput.value = '';
+            newExerciseForm.classList.add('hidden');
+
+            if (customExercisesAdded >= 2) {
+                addExerciseBtn.classList.add('hidden');
+                addExerciseLimitMsg.classList.remove('hidden');
+            } else {
+                addExerciseBtn.classList.remove('hidden');
+            }
+        }
+
+        // --- Initialize App ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updateChallengeInfo();
+            initFirebase();
+            
+            // Event listeners moved here for clarity
+            repsInput.addEventListener('change', () => {
+                if (parseInt(repsInput.value) < 1) repsInput.value = 1;
+                if (parseInt(repsInput.value) > 100) repsInput.value = 100;
+            });
+            startBtn.addEventListener('click', startWorkout);
+            doneBtn.addEventListener('click', completeRound);
+            endBtn.addEventListener('click', endWorkout);
+            restartBtn.addEventListener('click', () => {
+                previousAttemptCompleted = 0;
+                previousAttemptMissedByExercise = {};
+                roundTimes = [];
+                resetApp();
+            });
+            retryBtn.addEventListener('click', retryWorkout);
+            downloadCsvBtn.addEventListener('click', downloadCSV);
+
+            addExerciseBtn.addEventListener('click', () => {
+                addExerciseBtn.classList.add('hidden');
+                newExerciseForm.classList.remove('hidden');
+                newExerciseInput.focus();
+            });
+            saveExerciseBtn.addEventListener('click', handleAddNewExercise);
+        });
+
     </script>
 </body>
 </html>
+
+
