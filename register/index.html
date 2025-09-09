@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wrestling.Systems - Coming Soon</title>
+
+    <!-- Favicon Links -->
+    <link rel="apple-touch-icon" sizes="180x180" href="https://assets.wrestling.systems/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://assets.wrestling.systems/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://assets.wrestling.systems/favicon-16x16.png">
+    <link rel="shortcut icon" href="https://assets.wrestling.systems/favicon.ico">
+    <!-- Note: android-chrome icons are often in a manifest.json, but linking them here provides fallback support. -->
+    <link rel="icon" type="image/png" sizes="192x192" href="https://assets.wrestling.systems/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="https://assets.wrestling.systems/android-chrome-512x512.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom Gold Color */
+        .bg-gold-500 { background-color: #D4AF37; }
+        .hover\:bg-gold-600:hover { background-color: #C09B2D; }
+        .text-gold-300 { color: #E6C75E; }
+        .focus\:ring-gold-500:focus { --tw-ring-color: #D4AF37; }
+    </style>
+</head>
+<body class="bg-black text-gray-200 antialiased">
+
+    <!-- Main Container -->
+    <div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-black to-gray-900 p-4">
+        
+        <div class="w-full max-w-lg mx-auto text-center pt-12">
+            <!-- Logo/Header -->
+            <img src="https://assets.wrestling.systems/logo-gemini2.png" alt="Wrestling.Systems Logo" class="w-48 mx-auto mb-6">
+            <p class="text-xl md:text-2xl font-medium text-gold-300 mb-4">
+                The Revolution in Wrestling Training is Coming.
+            </p>
+        </div>
+
+        <!-- App Description Section -->
+        <div class="w-full max-w-xl mx-auto text-center px-4 mb-8">
+            <p class="text-lg text-gray-300 leading-relaxed">
+                Wrestling.Systems is the ultimate platform for wrestling coaches to build, share, and track their training systems. Empower your athletes with proven techniques and monitor their progress, all in one place.
+            </p>
+        </div>
+
+        <div class="w-full max-w-lg mx-auto bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-gray-700">
+            
+            <!-- Content -->
+            <div id="form-container">
+                <h2 class="text-2xl font-bold text-white text-center mb-2">Get Early Access</h2>
+                <p class="text-gray-400 text-center mb-6">Create your account now and be the first to know when we launch.</p>
+                
+                <!-- Sign-up Form -->
+                <form id="signup-form" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="firstName" class="block text-sm font-medium text-gray-300">First Name</label>
+                            <input type="text" id="firstName" name="firstName" required
+                                class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
+                        </div>
+                        <div>
+                            <label for="lastName" class="block text-sm font-medium text-gray-300">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required
+                                class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-300">Email Address</label>
+                        <input type="email" id="email" name="email" required
+                            class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
+                        <input type="password" id="password" name="password" required minlength="6"
+                            class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
+                    </div>
+                    <div>
+                        <button type="submit" id="submit-button"
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gold-500 hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
+                            Create My Account
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Divider -->
+                <div class="my-6 flex items-center">
+                    <div class="flex-grow border-t border-gray-600"></div>
+                    <span class="flex-shrink mx-4 text-gray-400 text-sm">Or continue with</span>
+                    <div class="flex-grow border-t border-gray-600"></div>
+                </div>
+
+                <!-- Social Logins -->
+                <div class="space-y-3">
+                    <button id="google-signin" class="w-full flex items-center justify-center py-2.5 px-4 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-white bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
+                        <svg class="w-5 h-5 mr-2 text-gold-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 172.9 60.3L360 128.2c-23.2-21.5-58.2-34.6-112-34.6-88.6 0-161.2 71.5-161.2 162.3s72.6 162.3 161.2 162.3c98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 26.9 3.9 41.4z"></path></svg>
+                        <span>Google</span>
+                    </button>
+                    <button id="facebook-signin" class="w-full flex items-center justify-center py-2.5 px-4 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-white bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
+                        <svg class="w-5 h-5 mr-2 text-gold-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"></path></svg>
+                        <span>Facebook</span>
+                    </button>
+                    <button id="microsoft-signin" class="w-full flex items-center justify-center py-2.5 px-4 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-white bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
+                        <svg class="w-5 h-5 mr-2 text-gold-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M0 32h192v192H0V32zm256 0h192v192H256V32zM0 288h192v192H0V288zm256 288h192v-96H256v96zm0-128h192v-96H256v96z"></path></svg>
+                        <span>Microsoft</span>
+                    </button>
+                </div>
+
+                <p id="error-message" class="text-red-400 text-sm text-center mt-4"></p>
+            </div>
+
+            <!-- Success Message -->
+            <div id="success-message" class="hidden text-center py-8">
+                <svg class="mx-auto h-16 w-16 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h2 class="mt-4 text-2xl font-bold text-white">You're In!</h2>
+                <p class="mt-2 text-gray-300">Thank you for signing up. We'll send you an email the moment wrestling.systems goes live.</p>
+            </div>
+        </div>
+        
+        <!-- Footer with Legal Links -->
+        <footer class="text-center text-gray-500 mt-12 pb-8 space-y-2">
+            <div class="flex justify-center space-x-4 text-sm">
+                <a href="https://wrestling.systems/terms/" target="_blank" rel="noopener noreferrer" class="hover:text-gold-300 transition-colors">Terms of Service</a>
+                <span class="text-gray-600">|</span>
+                <a href="https://wrestling.systems/privacypolicy/" target="_blank" rel="noopener noreferrer" class="hover:text-gold-300 transition-colors">Privacy Policy</a>
+            </div>
+            <p>&copy; 2025 Wrestling.Systems. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            GoogleAuthProvider,
+            FacebookAuthProvider,
+            OAuthProvider,
+            signInWithPopup
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
+
+        // Your web app's Firebase configuration
+        // Using 'auth.wrestling.systems' for Firebase Authentication
+        // Ensure 'auth.wrestling.systems' is verified in Firebase Console > Hosting and Authentication > Authorized domains
+        // Add A records in Cloudflare: auth.wrestling.systems -> 151.101.1.195 and 151.101.65.195
+        const firebaseConfig = {
+            apiKey: "AIzaSyASn9xe5RRKFGXNi-Vha-NunDYj1mv7D3g",
+            authDomain: "auth.wrestling.systems",
+            projectId: "wrestlingsystems",
+            storageBucket: "wrestlingsystems.appspot.com",
+            messagingSenderId: "255692661115",
+            appId: "1:255692661115:web:7ad4f8d39b78fb1220ddde",
+            measurementId: "G-E52GDENT1E"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Initialize App Check with reCAPTCHA v3
+        // Replace with your reCAPTCHA v3 site key from Google reCAPTCHA admin console, registered for wrestling.systems
+        const appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider('6Ler2pgrAAAAAAQwDvNoe4voerXxtlVTwvdi0sg2'),
+            isTokenAutoRefreshEnabled: true
+        });
+        
+        // Initialize Auth Providers
+        const googleProvider = new GoogleAuthProvider();
+        const facebookProvider = new FacebookAuthProvider();
+        const microsoftProvider = new OAuthProvider('microsoft.com');
+
+        // Get form elements
+        const signupForm = document.getElementById('signup-form');
+        const errorMessage = document.getElementById('error-message');
+        const submitButton = document.getElementById('submit-button');
+        const formContainer = document.getElementById('form-container');
+        const successMessage = document.getElementById('success-message');
+        const googleSignInButton = document.getElementById('google-signin');
+        const facebookSignInButton = document.getElementById('facebook-signin');
+        const microsoftSignInButton = document.getElementById('microsoft-signin');
+
+        // Helper Functions
+        const showSuccess = () => {
+            formContainer.classList.add('hidden');
+            successMessage.classList.remove('hidden');
+        };
+
+        const showError = (message, errorObj = null) => {
+            errorMessage.textContent = message;
+            if (errorObj) console.error("Sign-in Error:", errorObj.code, errorObj.message);
+        };
+
+        // Handle creating user data in Firestore after social sign-in
+        const createSocialUserInFirestore = async (user) => {
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+
+                if (!docSnap.exists()) {
+                    const nameParts = user.displayName ? user.displayName.split(' ') : ['', ''];
+                    const firstName = nameParts[0];
+                    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+                    
+                    await setDoc(userRef, {
+                        firstName: firstName,
+                        lastName: lastName,
+                        email: user.email,
+                        createdAt: new Date(),
+                        provider: user.providerData[0].providerId
+                    });
+                }
+                showSuccess();
+            } catch (error) {
+                showError("Failed to save user data. Please try again.", error);
+                throw error;
+            }
+        };
+
+        // Event Listeners
+
+        // Handle Email/Password form submission
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitButton.disabled = true;
+            submitButton.textContent = 'Creating Account...';
+            errorMessage.textContent = '';
+            const { firstName, lastName, email, password } = signupForm;
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value);
+                const user = userCredential.user;
+                await setDoc(doc(db, "users", user.uid), {
+                    firstName: firstName.value,
+                    lastName: lastName.value,
+                    email: email.value,
+                    createdAt: new Date()
+                });
+                showSuccess();
+            } catch (error) {
+                let friendlyMessage = "An unexpected error occurred.";
+                if (error.code === 'auth/email-already-in-use') friendlyMessage = 'This email address is already registered.';
+                if (error.code === 'auth/weak-password') friendlyMessage = 'Password should be at least 6 characters long.';
+                if (error.code.includes('app-check')) friendlyMessage = 'Could not verify you are human. Please refresh and try again.';
+                if (error.code === 'auth/unauthorized-domain') friendlyMessage = 'Authentication domain not authorized. Please contact support or try again later.';
+                if (error.code === 'permission-denied') friendlyMessage = 'Failed to save user data due to permissions. Please contact support.';
+                showError(friendlyMessage, error);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Create My Account';
+            }
+        });
+        
+        // Generic Social Sign-in Handler
+        const handleSocialSignIn = async (provider, button) => {
+            errorMessage.textContent = '';
+            button.disabled = true;
+            try {
+                const result = await signInWithPopup(auth, provider);
+                await createSocialUserInFirestore(result.user);
+            } catch (error) {
+                let friendlyMessage = `Could not sign in with ${provider.providerId}. Please try again.`;
+                if (error.code === 'auth/account-exists-with-different-credential') {
+                    friendlyMessage = "An account already exists with this email. Please sign in with your original method.";
+                } else if (error.code.includes('app-check')) {
+                    friendlyMessage = 'Could not verify you are human. Please refresh and try again.';
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    friendlyMessage = 'Authentication domain not authorized. Please contact support or try again later.';
+                } else if (error.code === 'permission-denied') {
+                    friendlyMessage = 'Failed to save user data due to permissions. Please contact support.';
+                }
+                showError(friendlyMessage, error);
+            } finally {
+                button.disabled = false;
+            }
+        };
+
+        // Attach event listeners
+        googleSignInButton.addEventListener('click', () => handleSocialSignIn(googleProvider, googleSignInButton));
+        facebookSignInButton.addEventListener('click', () => handleSocialSignIn(facebookProvider, facebookSignInButton));
+        microsoftSignInButton.addEventListener('click', () => handleSocialSignIn(microsoftProvider, microsoftSignInButton));
+    </script>
+</body>
+</html>
