@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modular Workout Builder</title>
     <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Tone.js for audio cues --><script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         /* Using Inter font */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
@@ -28,6 +29,10 @@
             --hover-button-bg: #D97706; /* Darker amber for hover */
             --remove-button-bg: #EF4444; /* Red for remove */
             --remove-button-hover: #DC2626; /* Darker red for remove hover */
+            --pause-button-bg: #3B82F6; /* Blue for pause */
+            --pause-button-hover: #2563EB;
+            --finish-button-bg: #10B981; /* Green for finish */
+            --finish-button-hover: #059669;
 
             /* New golden glow for title */
             --golden-text: #FFD700; /* Gold color */
@@ -101,25 +106,31 @@
         }
 
         /* Primary Button */
-        .btn-primary {
-            background-color: var(--button-bg);
-            color: var(--button-text);
+        .btn {
             font-weight: 700;
             padding: 0.75rem 1.25rem;
-            border-radius: 0.75rem; /* Slightly more rounded */
+            border-radius: 0.75rem;
             width: 100%;
             transition: background-color 0.2s, transform 0.1s;
             cursor: pointer;
             border: none;
-            font-size: 1.125rem; /* Larger text */
-            box-shadow: 0 4px 10px rgba(246, 173, 5, 0.3); /* Button specific glow */
+            font-size: 1.125rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            box-shadow: 0 4px 10px rgba(246, 173, 5, 0.3);
         }
         .btn-primary:hover {
             background-color: var(--hover-button-bg);
-            transform: translateY(-1px);
-        }
-        .btn-primary:active {
-            transform: translateY(0);
         }
 
         /* Remove Button */
@@ -129,13 +140,29 @@
             font-size: 0.75rem;
             font-weight: 500;
             padding: 0.2rem 0.6rem;
-            border-radius: 0.5rem; /* Slightly less rounded than original, more consistent with app */
+            border-radius: 0.5rem;
             transition: background-color 0.2s;
             cursor: pointer;
             border: none;
         }
         .btn-remove:hover {
             background-color: var(--remove-button-hover);
+        }
+
+        /* Workout Screen Buttons */
+        .btn-pause {
+            background-color: var(--pause-button-bg);
+            color: white;
+        }
+        .btn-pause:hover {
+            background-color: var(--pause-button-hover);
+        }
+        .btn-finish {
+            background-color: var(--finish-button-bg);
+            color: white;
+        }
+        .btn-finish:hover {
+            background-color: var(--finish-button-hover);
         }
 
         /* Exercise list item */
@@ -154,6 +181,66 @@
             color: var(--secondary-text);
             margin-left: 0.75rem;
         }
+        
+        /* Workout Screen Specific Styles */
+        #workout-timer {
+            font-size: 6rem; /* Huge timer */
+            font-weight: 900;
+            color: var(--golden-text);
+            text-align: center;
+            line-height: 1;
+            margin-bottom: 1rem;
+            font-family: 'Inter', sans-serif;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        #workout-round-counter, #emom-minute-counter {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary-text);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        #workout-exercise-list .exercise-item {
+            background-color: transparent; /* Simpler list on workout screen */
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #2D3748;
+        }
+        #workout-exercise-list .exercise-item:last-child {
+            border-bottom: none;
+        }
+        #countdown-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(14, 18, 27, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            font-size: 10rem;
+            font-weight: 900;
+            color: var(--golden-text);
+            text-shadow: 0 0 20px var(--golden-glow-strong);
+        }
+
+        /* Results Screen */
+        #results-score {
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--golden-text);
+            text-align: center;
+            margin: 2rem 0;
+            line-height: 1.2;
+        }
+         #results-score span {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--secondary-text);
+            display: block;
+         }
+
 
         /* Hide number input spinners */
         input[type=number]::-webkit-inner-spin-button, 
@@ -169,9 +256,12 @@
 </head>
 <body class="antialiased flex items-center justify-center min-h-screen">
 
-    <div id="app" class="max-w-lg mx-auto w-full p-4">
+    <div id="app" class="max-w-lg mx-auto w-full p-4 relative">
         
-        <!-- Main App Card with Glow --><div class="app-card">
+        <!-- =================================== -->
+        <!-- SCREEN 1: WORKOUT BUILDER          -->
+        <!-- =================================== -->
+        <div id="builder-screen" class="app-card">
             
             <!-- Header --><h1 class="h1-main">PRE-SEASON</h1>
             <h2 class="h2-sub">CONDITIONING</h2>
@@ -200,7 +290,7 @@
                         </div>
                         <!-- Exercise-specific details (Reps, Sets) --><div id="exercise-details" class="flex space-x-4">
                             <!-- This content is generated by JavaScript --></div>
-                        <button id="add-exercise-btn" class="btn-primary !mt-5">Add Exercise</button>
+                        <button id="add-exercise-btn" class="btn btn-primary !mt-5">Add Exercise</button>
                     </div>
                 </div>
             </div>
@@ -210,9 +300,56 @@
                 <p id="summary-header" class="text-xl text-primary-text font-semibold mb-4"></p>
                 <ul id="summary-list" class="space-y-3">
                     <!-- This content is generated by JavaScript --></ul>
+                <button id="start-workout-btn" class="btn btn-finish !w-full !mt-6">Start Workout</button>
             </div>
 
         </div>
+
+        <!-- =================================== -->
+        <!-- SCREEN 2: WORKOUT ACTIVE         -->
+        <!-- =================================== -->
+        <div id="workout-screen" class="app-card hidden">
+            <!-- Big Timer Display -->
+            <div id="workout-timer">00:00</div>
+            
+            <!-- Context-specific counters -->
+            <div id="workout-round-counter" class="hidden">Round 1</div>
+            <div id="emom-minute-counter" class="hidden">Minute 1 / 10</div>
+
+            <!-- Exercise List -->
+            <div class="my-6">
+                <h3 id="workout-list-header" class="section-title mb-2">Exercises</h3>
+                <ul id="workout-exercise-list" class="space-y-2">
+                    <!-- JS populated -->
+                </ul>
+            </div>
+
+            <!-- Controls -->
+            <div class="space-y-4 mt-8">
+                <button id="next-round-btn" class="btn btn-primary hidden">Next Round</button>
+                <div class="flex space-x-4">
+                    <button id="pause-resume-btn" class="btn btn-pause w-1/2">Pause</button>
+                    <button id="finish-workout-btn" class="btn btn-finish w-1/2">Finish</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================== -->
+        <!-- SCREEN 3: RESULTS                -->
+        <!-- =================================== -->
+        <div id="complete-screen" class="app-card hidden">
+            <h1 class="h1-main">WORKOUT</h1>
+            <h2 class="h2-sub">COMPLETE</h2>
+
+            <div id="results-score">
+                <!-- JS Populated -->
+            </div>
+
+            <button id="back-to-builder-btn" class="btn btn-primary !mt-8">Build New Workout</button>
+        </div>
+
+        <!-- Countdown Overlay -->
+        <div id="countdown-overlay" class="hidden">3</div>
 
     </div>
 
@@ -222,23 +359,80 @@
             // --- STATE ---
             let workoutConfig = {
                 format: 'amrap',
-                time: null,
+                time: null, // in minutes
                 rounds: null,
                 exercises: []
             };
+            let timerInterval = null;
+            let totalSeconds = 0;
+            let currentRound = 1;
+            let isPaused = false;
+            let workoutStartTime = 0;
+            let totalPausedTime = 0;
+            let pauseStartTime = 0;
+            let emomMinute = 1;
+
+            // --- AUDIO ---
+            // Create synth for beeps
+            const synth = new Tone.Synth().toDestination();
+            const longBeep = new Tone.Synth({
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 },
+                volume: -5
+            }).toDestination();
+
+            function playBeep(note, duration) {
+                synth.triggerAttackRelease(note, duration);
+            }
+            function playLongBeep(note, duration) {
+                longBeep.triggerAttackRelease(note, duration);
+            }
 
             // --- DOM ELEMENTS ---
+            const screens = {
+                builder: document.getElementById('builder-screen'),
+                workout: document.getElementById('workout-screen'),
+                complete: document.getElementById('complete-screen')
+            };
+            const countdownOverlay = document.getElementById('countdown-overlay');
+
+            // Builder Screen
             const formatSelect = document.getElementById('workout-format');
             const formatOptionsContainer = document.getElementById('format-options');
             const exerciseDetailsContainer = document.getElementById('exercise-details');
             const exerciseNameInput = document.getElementById('exercise-name');
             const addExerciseBtn = document.getElementById('add-exercise-btn');
-            
             const summaryContainer = document.getElementById('workout-summary');
             const summaryHeader = document.getElementById('summary-header');
             const summaryList = document.getElementById('summary-list');
+            const startWorkoutBtn = document.getElementById('start-workout-btn');
+
+            // Workout Screen
+            const timerDisplay = document.getElementById('workout-timer');
+            const roundCounterDisplay = document.getElementById('workout-round-counter');
+            const emomMinuteCounter = document.getElementById('emom-minute-counter');
+            const workoutExerciseList = document.getElementById('workout-exercise-list');
+            const workoutListHeader = document.getElementById('workout-list-header');
+            const nextRoundBtn = document.getElementById('next-round-btn');
+            const pauseResumeBtn = document.getElementById('pause-resume-btn');
+            const finishWorkoutBtn = document.getElementById('finish-workout-btn');
+
+            // Complete Screen
+            const resultsScore = document.getElementById('results-score');
+            const backToBuilderBtn = document.getElementById('back-to-builder-btn');
+
 
             // --- FUNCTIONS ---
+
+            /**
+             * Hides all screens and shows the target one.
+             */
+            function showScreen(screenName) {
+                Object.values(screens).forEach(screen => screen.classList.add('hidden'));
+                if (screens[screenName]) {
+                    screens[screenName].classList.remove('hidden');
+                }
+            }
 
             /**
              * Updates the UI inputs based on the selected workout format.
@@ -247,15 +441,11 @@
                 const format = formatSelect.value;
                 workoutConfig.format = format;
                 
-                // Clear previous options
                 formatOptionsContainer.innerHTML = '';
                 exerciseDetailsContainer.innerHTML = '';
 
                 let formatOptionsHTML = '';
-                let exerciseDetailsHTML = '';
-
-               // All formats will now use a single "Reps" input
-               exerciseDetailsHTML = `
+                let exerciseDetailsHTML = `
                    <div class="flex-1">
                        <label for="exercise-reps" class="form-label">Reps</label>
                        <input type="number" id="exercise-reps" class="form-input" placeholder="e.g., 10">
@@ -264,42 +454,21 @@
 
                 switch (format) {
                     case 'amrap':
-                        formatOptionsHTML = `
-                            <div>
-                                <label for="workout-time" class="form-label">2. Set Time</label>
-                                <input type="number" id="workout-time" class="form-input" placeholder="Time (minutes)">
-                            </div>
-                        `;
+                        formatOptionsHTML = `<div><label for="workout-time" class="form-label">2. Set Time</label><input type="number" id="workout-time" class="form-input" placeholder="Time (minutes)"></div>`;
                         break;
-                    
                     case 'emom':
-                        formatOptionsHTML = `
-                            <div>
-                                <label for="workout-time" class="form-label">2. Set Time</label>
-                                <input type="number" id="workout-time" class="form-input" placeholder="Total Minutes">
-                            </div>
-                        `;
+                        formatOptionsHTML = `<div><label for="workout-time" class="form-label">2. Set Time</label><input type="number" id="workout-time" class="form-input" placeholder="Total Minutes"></div>`;
                         break;
-
                     case 'rft':
-                        formatOptionsHTML = `
-                            <div>
-                                <label for="workout-rounds" class="form-label">2. Set Rounds</label>
-                                <input type="number" id="workout-rounds" class="form-input" placeholder="e.g., 5">
-                            </div>
-                        `;
+                        formatOptionsHTML = `<div><label for="workout-rounds" class="form-label">2. Set Rounds</label><input type="number" id="workout-rounds" class="form-input" placeholder="e.g., 5"></div>`;
                         break;
-
                    case 'chipper':
                        formatOptionsHTML = `<p class="form-label text-center mb-4">2. Add exercises to complete for time</p>`;
-                       // exerciseDetailsHTML is already set above
                         break;
                 }
 
                 formatOptionsContainer.innerHTML = formatOptionsHTML;
                 exerciseDetailsContainer.innerHTML = exerciseDetailsHTML;
-
-                // Add event listeners to new inputs
                 addFormatInputListeners();
             }
 
@@ -329,42 +498,28 @@
              */
             function addExercise() {
                 const name = exerciseNameInput.value.trim();
+                const repsInput = document.getElementById('exercise-reps');
+                const reps = repsInput.value.trim();
+
                 if (!name) {
-                    // Replaced alert with a custom modal or inline error in a real app
                     console.warn('Please enter an exercise name.'); 
-                    // Simple feedback without alert:
                     exerciseNameInput.style.borderColor = 'red';
                     setTimeout(() => { exerciseNameInput.style.borderColor = '#4A5568'; }, 2000);
                     return;
                 }
-
-                const newExercise = { name };
-                
-                // Get reps/sets based on format
-                const repsInput = document.getElementById('exercise-reps');
-
-                if (repsInput) {
-                    newExercise.reps = repsInput.value.trim() || '';
-                }
-
-               if (!newExercise.reps) {
-                    // Replaced alert
+               if (!reps) {
                     console.warn('Please enter reps for the exercise.');
                     repsInput.style.borderColor = 'red';
                     setTimeout(() => { repsInput.style.borderColor = '#4A5568'; }, 2000);
                      return;
                 }
 
-
-                workoutConfig.exercises.push(newExercise);
+                workoutConfig.exercises.push({ name, reps });
                 
-                // Clear inputs
                 exerciseNameInput.value = '';
-                if (repsInput) repsInput.value = '';
-                
+                repsInput.value = '';
                 exerciseNameInput.focus();
                 
-                // Update the summary
                 renderWorkoutSummary();
             }
 
@@ -372,15 +527,12 @@
              * Renders the entire workout summary based on the config object.
              */
             function renderWorkoutSummary() {
-                // Show the summary box if it's hidden
                 if (workoutConfig.exercises.length > 0 || workoutConfig.time || workoutConfig.rounds) {
                     summaryContainer.classList.remove('hidden');
                 } else {
-                    summaryContainer.classList.add('hidden'); // Hide if nothing is configured
+                    summaryContainer.classList.add('hidden');
                 }
 
-
-                // 1. Update Header
                 let headerText = '';
                 const { format, time, rounds } = workoutConfig;
                 switch (format) {
@@ -399,7 +551,6 @@
                 }
                 summaryHeader.textContent = headerText;
 
-                // 2. Update Exercise List
                 summaryList.innerHTML = '';
                 if (workoutConfig.exercises.length === 0) {
                     summaryList.innerHTML = `<li class="text-sm text-secondary-text p-3 text-center">No exercises added yet.</li>`;
@@ -407,17 +558,12 @@
                 }
 
                 workoutConfig.exercises.forEach((ex, index) => {
-                    let details = '';
-                   if (ex.reps) { // All formats now just use reps
-                        details = `${ex.reps} reps`;
-                    }
-
                     const li = document.createElement('li');
                     li.className = "exercise-item";
                     li.innerHTML = `
                         <span class="text-white font-medium">
                             ${ex.name}
-                            ${details ? `<span class="exercise-item-details">(${details})</span>` : ''}
+                            <span class="exercise-item-details">(${ex.reps} reps)</span>
                         </span>
                         <button class="btn-remove" data-index="${index}">Remove</button>
                     `;
@@ -436,18 +582,280 @@
                 }
             }
 
+            /**
+             * Validates config and starts the 3-2-1 countdown.
+             */
+            async function handleStartWorkout() {
+                const { format, time, rounds, exercises } = workoutConfig;
+                
+                // Validation
+                if (exercises.length === 0) {
+                    console.error("Add exercises first"); // Replace with modal
+                    return;
+                }
+                if ((format === 'amrap' || format === 'emom') && !time) {
+                    console.error("Set time for AMRAP/EMOM"); // Replace with modal
+                     return;
+                }
+                if (format === 'rft' && !rounds) {
+                     console.error("Set rounds for RFT"); // Replace with modal
+                     return;
+                }
 
-            // --- INITIALIZATION ---
+                // Start audio context (required by browsers)
+                await Tone.start();
+
+                // Show 3-2-1 Countdown
+                countdownOverlay.classList.remove('hidden');
+                countdownOverlay.textContent = '3';
+                playBeep('C5', '0.1');
+                await new Promise(r => setTimeout(r, 1000));
+                
+                countdownOverlay.textContent = '2';
+                playBeep('C5', '0.1');
+                await new Promise(r => setTimeout(r, 1000));
+                
+                countdownOverlay.textContent = '1';
+                playBeep('C5', '0.1');
+                await new Promise(r => setTimeout(r, 1000));
+                
+                countdownOverlay.textContent = 'GO!';
+                playLongBeep('C6', '0.5');
+                await new Promise(r => setTimeout(r, 500));
+
+                countdownOverlay.classList.add('hidden');
+                
+                // Initialize and show workout screen
+                initializeWorkout();
+                showScreen('workout');
+                startTimer();
+            }
+
+            /**
+             * Sets up the workout screen based on config.
+             */
+            function initializeWorkout() {
+                const { format, time, rounds, exercises } = workoutConfig;
+                
+                // Reset state
+                isPaused = false;
+                currentRound = 1;
+                emomMinute = 1;
+                totalPausedTime = 0;
+                pauseStartTime = 0;
+                pauseResumeBtn.textContent = 'Pause';
+                
+                // Populate exercise list
+                workoutExerciseList.innerHTML = '';
+                exercises.forEach(ex => {
+                     const li = document.createElement('li');
+                    li.className = "exercise-item";
+                    li.innerHTML = `
+                        <span class="text-white font-medium">${ex.name}</span>
+                        <span class="exercise-item-details">${ex.reps} reps</span>
+                    `;
+                    workoutExerciseList.appendChild(li);
+                });
+
+                // Configure UI based on format
+                roundCounterDisplay.classList.add('hidden');
+                nextRoundBtn.classList.add('hidden');
+                emomMinuteCounter.classList.add('hidden');
+                workoutListHeader.textContent = 'Exercises';
+
+                switch (format) {
+                    case 'amrap':
+                        totalSeconds = time * 60;
+                        roundCounterDisplay.textContent = 'Round 1';
+                        roundCounterDisplay.classList.remove('hidden');
+                        nextRoundBtn.classList.remove('hidden');
+                        break;
+                    case 'emom':
+                        totalSeconds = time * 60;
+                        emomMinuteCounter.textContent = `Minute 1 / ${time}`;
+                        emomMinuteCounter.classList.remove('hidden');
+                        workoutListHeader.textContent = `On the Minute:`;
+                        break;
+                    case 'rft':
+                        totalSeconds = 0; // Count up
+                        roundCounterDisplay.textContent = `Round 1 / ${rounds}`;
+                        roundCounterDisplay.classList.remove('hidden');
+                        nextRoundBtn.classList.remove('hidden');
+                        break;
+                    case 'chipper':
+                        totalSeconds = 0; // Count up
+                        break;
+                }
+                
+                timerDisplay.textContent = formatTime(totalSeconds);
+            }
+            
+            /**
+             * Starts the master timer interval.
+             */
+            function startTimer() {
+                workoutStartTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+
+            /**
+             * The main timer loop, called every second.
+             */
+            function updateTimer() {
+                if (isPaused) return;
+
+                const { format, time } = workoutConfig;
+                let elapsedSeconds = Math.floor((Date.now() - workoutStartTime - totalPausedTime) / 1000);
+
+                switch (format) {
+                    case 'amrap':
+                    case 'emom':
+                        const remainingSeconds = (time * 60) - elapsedSeconds;
+                        timerDisplay.textContent = formatTime(remainingSeconds);
+
+                        if (format === 'emom') {
+                            const secondsIntoMinute = elapsedSeconds % 60;
+                            if (secondsIntoMinute === 0 && elapsedSeconds > 0) {
+                                emomMinute++;
+                                emomMinuteCounter.textContent = `Minute ${emomMinute} / ${time}`;
+                                playLongBeep('C6', '0.3'); // Beep at start of new minute
+                            } else if (secondsIntoMinute >= 57) {
+                                playBeep('C5', '0.1'); // 3-2-1 beeps
+                            }
+                        }
+
+                        if (remainingSeconds <= 0) {
+                            handleFinishWorkout();
+                        }
+                        break;
+                    
+                    case 'rft':
+                    case 'chipper':
+                        totalSeconds = elapsedSeconds;
+                        timerDisplay.textContent = formatTime(totalSeconds);
+                        break;
+                }
+            }
+
+            /**
+             * Toggles the pause state of the timer.
+             */
+            function handlePauseResume() {
+                isPaused = !isPaused;
+                if (isPaused) {
+                    // Pausing
+                    pauseStartTime = Date.now();
+                    clearInterval(timerInterval);
+                    pauseResumeBtn.textContent = 'Resume';
+                    pauseResumeBtn.classList.remove('btn-pause');
+                    pauseResumeBtn.classList.add('btn-finish'); // Change to green
+                } else {
+                    // Resuming
+                    totalPausedTime += Date.now() - pauseStartTime;
+                    startTimer(); // Re-start the interval
+                    pauseResumeBtn.textContent = 'Pause';
+                    pauseResumeBtn.classList.add('btn-pause');
+                    pauseResumeBtn.classList.remove('btn-finish');
+                }
+            }
+
+            /**
+            * Increments the round counter.
+            */
+            function handleNextRound() {
+                currentRound++;
+                if (workoutConfig.format === 'rft') {
+                    roundCounterDisplay.textContent = `Round ${currentRound} / ${workoutConfig.rounds}`;
+                    if (currentRound > workoutConfig.rounds) {
+                        // Auto-finish if they exceed rounds
+                        handleFinishWorkout();
+                    }
+                } else { // AMRAP
+                    roundCounterDisplay.textContent = `Round ${currentRound}`;
+                }
+            }
+
+            /**
+             * Stops the timer and shows the results screen.
+             */
+            function handleFinishWorkout() {
+                clearInterval(timerInterval);
+                playLongBeep('G6', '0.8');
+
+                // Prepare results
+                const { format } = workoutConfig;
+                let scoreHTML = '';
+                switch (format) {
+                    case 'amrap':
+                        scoreHTML = `${currentRound} <span>Rounds</span>`;
+                        break;
+                    case 'emom':
+                        scoreHTML = `${workoutConfig.time} <span>Minutes Complete</span>`;
+                        break;
+                    case 'rft':
+                    case 'chipper':
+                        scoreHTML = `${formatTime(totalSeconds)} <span>Total Time</span>`;
+                        break;
+                }
+                resultsScore.innerHTML = scoreHTML;
+                showScreen('complete');
+            }
+
+            /**
+             * Resets the app back to the builder.
+             */
+            function resetToBuilder() {
+                // Reset all state
+                workoutConfig = {
+                    format: 'amrap', time: null, rounds: null, exercises: []
+                };
+                clearInterval(timerInterval);
+                totalSeconds = 0;
+                currentRound = 1;
+                isPaused = false;
+                
+                // Reset UI
+                formatSelect.value = 'amrap';
+                updateFormatOptions();
+                renderWorkoutSummary();
+                summaryContainer.classList.add('hidden');
+                
+                showScreen('builder');
+            }
+
+            /**
+             * Utility to format seconds into MM:SS.
+             */
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+
+
+            // --- INITIALIZATION & EVENT LISTENERS ---
+
+            // Builder Listeners
             formatSelect.addEventListener('change', () => {
                 updateFormatOptions();
-                renderWorkoutSummary(); // Re-render header when format changes
+                renderWorkoutSummary();
             });
             addExerciseBtn.addEventListener('click', addExercise);
             summaryList.addEventListener('click', handleSummaryClick);
+            startWorkoutBtn.addEventListener('click', handleStartWorkout);
+
+            // Workout Screen Listeners
+            pauseResumeBtn.addEventListener('click', handlePauseResume);
+            nextRoundBtn.addEventListener('click', handleNextRound);
+            finishWorkoutBtn.addEventListener('click', handleFinishWorkout);
+
+            // Results Screen Listeners
+            backToBuilderBtn.addEventListener('click', resetToBuilder);
 
             // Initial setup
             updateFormatOptions();
             renderWorkoutSummary();
+            showScreen('builder'); // Start on the builder
         });
     </script>
 </body>
