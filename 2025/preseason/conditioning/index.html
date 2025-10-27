@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modular Workout Builder</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Using Inter font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0E121B; /* Very dark background */
+            color: #F9FAFB; /* Light text */
+        }
+
+        /* Custom color variables matching the provided image */
+        :root {
+            --bg-dark: #0E121B;
+            --card-bg: #1A1F2B; /* Darker card background */
+            --border-glow: #F6AD05; /* Amber glow from the image */
+            --primary-text: #F6AD05; /* Amber text for titles/accents */
+            --secondary-text: #A0AEC0; /* Grayish text */
+            --input-bg: #2D3748; /* Darker input background */
+            --button-bg: #F6AD05; /* Amber button */
+            --button-text: #0E121B; /* Dark text on amber button */
+            --hover-button-bg: #D97706; /* Darker amber for hover */
+            --remove-button-bg: #EF4444; /* Red for remove */
+            --remove-button-hover: #DC2626; /* Darker red for remove hover */
+
+            /* New golden glow for title */
+            --golden-text: #FFD700; /* Gold color */
+            --golden-glow-light: #FFEA00; /* Lighter gold for inner glow */
+            --golden-glow-strong: #FFA500; /* Orange-gold for outer glow */
+        }
+
+        /* Main app container styling with glow */
+        .app-card {
+            background-color: var(--card-bg);
+            border-radius: 1.5rem; /* More rounded corners */
+            padding: 2rem;
+            /* Toned down overall card glow, using amber */
+            box-shadow: 0 0 20px rgba(246, 173, 5, 0.4); 
+            border: 1px solid rgba(246, 173, 5, 0.3); /* Subtle amber border for definition */
+        }
+
+        /* Titles */
+        .h1-main {
+            font-weight: 900; /* Extra bold */
+            color: var(--golden-text); /* Golden color */
+            text-align: center;
+            font-size: 3.5rem; /* Even larger */
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.07em; /* Tighter letter spacing */
+            /* Toned down text shadow for golden glow */
+            text-shadow: 
+                0 0 8px rgba(255, 215, 0, 0.5), /* Softer inner glow */
+                0 0 15px rgba(246, 173, 5, 0.4); /* Fainter outer amber glow */
+        }
+        .h2-sub {
+            font-weight: 700; /* Bold */
+            color: var(--golden-text); /* Also golden for consistency */
+            text-align: center;
+            font-size: 1.8rem; /* Larger */
+            margin-bottom: 2rem;
+            text-shadow: 0 0 6px rgba(255, 215, 0, 0.3); /* Toned down subtle glow for sub-title */
+        }
+        .section-title {
+            font-weight: 700;
+            color: #F9FAFB;
+            font-size: 1.125rem; /* lg */
+            margin-bottom: 1rem;
+        }
+
+        /* Form elements */
+        .form-label {
+            font-size: 0.875rem; /* sm */
+            font-weight: 500;
+            color: var(--secondary-text);
+            display: block;
+            margin-bottom: 0.5rem; /* Increased spacing */
+        }
+        .form-input, .form-select {
+            background-color: var(--input-bg);
+            color: #F9FAFB;
+            border: 1px solid #4A5568; /* Subtle border */
+            border-radius: 0.5rem;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.25rem; /* More spacing between elements */
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--border-glow); /* Back to amber focus glow */
+            box-shadow: 0 0 0 2px rgba(246, 173, 5, 0.5); /* Amber focus glow */
+        }
+        .form-input::placeholder {
+            color: #A0AEC0; /* Lighter placeholder text */
+        }
+
+        /* Primary Button */
+        .btn-primary {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            font-weight: 700;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem; /* Slightly more rounded */
+            width: 100%;
+            transition: background-color 0.2s, transform 0.1s;
+            cursor: pointer;
+            border: none;
+            font-size: 1.125rem; /* Larger text */
+            box-shadow: 0 4px 10px rgba(246, 173, 5, 0.3); /* Button specific glow */
+        }
+        .btn-primary:hover {
+            background-color: var(--hover-button-bg);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Remove Button */
+        .btn-remove {
+            background-color: var(--remove-button-bg);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.5rem; /* Slightly less rounded than original, more consistent with app */
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-remove:hover {
+            background-color: var(--remove-button-hover);
+        }
+
+        /* Exercise list item */
+        .exercise-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #252A36; /* Slightly lighter than card-bg for contrast */
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            color: #F9FAFB;
+        }
+        .exercise-item-details {
+            font-size: 0.9rem;
+            color: var(--secondary-text);
+            margin-left: 0.75rem;
+        }
+
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+    </style>
+</head>
+<body class="antialiased flex items-center justify-center min-h-screen">
+
+    <div id="app" class="max-w-lg mx-auto w-full p-4">
+        
+        <!-- Main App Card with Glow --><div class="app-card">
+            
+            <!-- Header --><h1 class="h1-main">PRE-SEASON</h1>
+            <h2 class="h2-sub">CONDITIONING</h2>
+
+            <!-- Main Configuration Form --><div class="space-y-6 mt-8">
+
+                <!-- Step 1: Workout Format --><div>
+                    <label for="workout-format" class="form-label">1. Select Format</label>
+                    <select id="workout-format" class="form-select">
+                        <option value="amrap">AMRAP (As Many Rounds As Possible)</option>
+                        <option value="emom">EMOM (Every Minute On The Minute)</option>
+                        <option value="rft">RFT (Rounds For Time)</option>
+                        <option value="chipper">Chipper (For Time)</option>
+                    </select>
+                </div>
+
+                <!-- Step 2: Format-Specific Options --><div id="format-options">
+                    <!-- This content is generated by JavaScript --></div>
+
+                <!-- Step 3: Exercise Builder --><div>
+                    <h3 class="section-title mb-4">3. Add Exercises</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="exercise-name" class="form-label">Exercise Name</label>
+                            <input type="text" id="exercise-name" class="form-input" placeholder="e.g., Push Ups">
+                        </div>
+                        <!-- Exercise-specific details (Reps, Sets) --><div id="exercise-details" class="flex space-x-4">
+                            <!-- This content is generated by JavaScript --></div>
+                        <button id="add-exercise-btn" class="btn-primary !mt-5">Add Exercise</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Workout Summary --><div id="workout-summary" class="mt-8 hidden">
+                <h3 class="section-title text-2xl mb-4">Your Workout</h3>
+                <p id="summary-header" class="text-xl text-primary-text font-semibold mb-4"></p>
+                <ul id="summary-list" class="space-y-3">
+                    <!-- This content is generated by JavaScript --></ul>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- STATE ---
+            let workoutConfig = {
+                format: 'amrap',
+                time: null,
+                rounds: null,
+                exercises: []
+            };
+
+            // --- DOM ELEMENTS ---
+            const formatSelect = document.getElementById('workout-format');
+            const formatOptionsContainer = document.getElementById('format-options');
+            const exerciseDetailsContainer = document.getElementById('exercise-details');
+            const exerciseNameInput = document.getElementById('exercise-name');
+            const addExerciseBtn = document.getElementById('add-exercise-btn');
+            
+            const summaryContainer = document.getElementById('workout-summary');
+            const summaryHeader = document.getElementById('summary-header');
+            const summaryList = document.getElementById('summary-list');
+
+            // --- FUNCTIONS ---
+
+            /**
+             * Updates the UI inputs based on the selected workout format.
+             */
+            function updateFormatOptions() {
+                const format = formatSelect.value;
+                workoutConfig.format = format;
+                
+                // Clear previous options
+                formatOptionsContainer.innerHTML = '';
+                exerciseDetailsContainer.innerHTML = '';
+
+                let formatOptionsHTML = '';
+                let exerciseDetailsHTML = '';
+
+               // All formats will now use a single "Reps" input
+               exerciseDetailsHTML = `
+                   <div class="flex-1">
+                       <label for="exercise-reps" class="form-label">Reps</label>
+                       <input type="number" id="exercise-reps" class="form-input" placeholder="e.g., 10">
+                   </div>
+               `;
+
+                switch (format) {
+                    case 'amrap':
+                        formatOptionsHTML = `
+                            <div>
+                                <label for="workout-time" class="form-label">2. Set Time</label>
+                                <input type="number" id="workout-time" class="form-input" placeholder="Time (minutes)">
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'emom':
+                        formatOptionsHTML = `
+                            <div>
+                                <label for="workout-time" class="form-label">2. Set Time</label>
+                                <input type="number" id="workout-time" class="form-input" placeholder="Total Minutes">
+                            </div>
+                        `;
+                        break;
+
+                    case 'rft':
+                        formatOptionsHTML = `
+                            <div>
+                                <label for="workout-rounds" class="form-label">2. Set Rounds</label>
+                                <input type="number" id="workout-rounds" class="form-input" placeholder="e.g., 5">
+                            </div>
+                        `;
+                        break;
+
+                   case 'chipper':
+                       formatOptionsHTML = `<p class="form-label text-center mb-4">2. Add exercises to complete for time</p>`;
+                       // exerciseDetailsHTML is already set above
+                        break;
+                }
+
+                formatOptionsContainer.innerHTML = formatOptionsHTML;
+                exerciseDetailsContainer.innerHTML = exerciseDetailsHTML;
+
+                // Add event listeners to new inputs
+                addFormatInputListeners();
+            }
+
+            /**
+             * Adds event listeners to the dynamically created format inputs.
+             */
+            function addFormatInputListeners() {
+                const timeInput = document.getElementById('workout-time');
+                const roundsInput = document.getElementById('workout-rounds');
+
+                if (timeInput) {
+                    timeInput.addEventListener('input', (e) => {
+                        workoutConfig.time = e.target.value ? parseInt(e.target.value, 10) : null;
+                        renderWorkoutSummary();
+                    });
+                }
+                if (roundsInput) {
+                    roundsInput.addEventListener('input', (e) => {
+                        workoutConfig.rounds = e.target.value ? parseInt(e.target.value, 10) : null;
+                        renderWorkoutSummary();
+                    });
+                }
+            }
+
+            /**
+             * Adds a new exercise to the config object from the inputs.
+             */
+            function addExercise() {
+                const name = exerciseNameInput.value.trim();
+                if (!name) {
+                    // Replaced alert with a custom modal or inline error in a real app
+                    console.warn('Please enter an exercise name.'); 
+                    // Simple feedback without alert:
+                    exerciseNameInput.style.borderColor = 'red';
+                    setTimeout(() => { exerciseNameInput.style.borderColor = '#4A5568'; }, 2000);
+                    return;
+                }
+
+                const newExercise = { name };
+                
+                // Get reps/sets based on format
+                const repsInput = document.getElementById('exercise-reps');
+
+                if (repsInput) {
+                    newExercise.reps = repsInput.value.trim() || '';
+                }
+
+               if (!newExercise.reps) {
+                    // Replaced alert
+                    console.warn('Please enter reps for the exercise.');
+                    repsInput.style.borderColor = 'red';
+                    setTimeout(() => { repsInput.style.borderColor = '#4A5568'; }, 2000);
+                     return;
+                }
+
+
+                workoutConfig.exercises.push(newExercise);
+                
+                // Clear inputs
+                exerciseNameInput.value = '';
+                if (repsInput) repsInput.value = '';
+                
+                exerciseNameInput.focus();
+                
+                // Update the summary
+                renderWorkoutSummary();
+            }
+
+            /**
+             * Renders the entire workout summary based on the config object.
+             */
+            function renderWorkoutSummary() {
+                // Show the summary box if it's hidden
+                if (workoutConfig.exercises.length > 0 || workoutConfig.time || workoutConfig.rounds) {
+                    summaryContainer.classList.remove('hidden');
+                } else {
+                    summaryContainer.classList.add('hidden'); // Hide if nothing is configured
+                }
+
+
+                // 1. Update Header
+                let headerText = '';
+                const { format, time, rounds } = workoutConfig;
+                switch (format) {
+                    case 'amrap':
+                        headerText = time ? `${time} MINUTE AMRAP` : 'AMRAP';
+                        break;
+                    case 'emom':
+                        headerText = time ? `${time} MINUTE EMOM` : 'EMOM';
+                        break;
+                    case 'rft':
+                        headerText = rounds ? `${rounds} ROUNDS FOR TIME` : 'ROUNDS FOR TIME';
+                        break;
+                   case 'chipper':
+                       headerText = 'CHIPPER (FOR TIME)';
+                        break;
+                }
+                summaryHeader.textContent = headerText;
+
+                // 2. Update Exercise List
+                summaryList.innerHTML = '';
+                if (workoutConfig.exercises.length === 0) {
+                    summaryList.innerHTML = `<li class="text-sm text-secondary-text p-3 text-center">No exercises added yet.</li>`;
+                    return;
+                }
+
+                workoutConfig.exercises.forEach((ex, index) => {
+                    let details = '';
+                   if (ex.reps) { // All formats now just use reps
+                        details = `${ex.reps} reps`;
+                    }
+
+                    const li = document.createElement('li');
+                    li.className = "exercise-item";
+                    li.innerHTML = `
+                        <span class="text-white font-medium">
+                            ${ex.name}
+                            ${details ? `<span class="exercise-item-details">(${details})</span>` : ''}
+                        </span>
+                        <button class="btn-remove" data-index="${index}">Remove</button>
+                    `;
+                    summaryList.appendChild(li);
+                });
+            }
+
+            /**
+             * Handles clicks on the summary list (for remove buttons).
+             */
+            function handleSummaryClick(e) {
+                if (e.target.classList.contains('btn-remove')) {
+                    const indexToRemove = parseInt(e.target.dataset.index, 10);
+                    workoutConfig.exercises.splice(indexToRemove, 1);
+                    renderWorkoutSummary();
+                }
+            }
+
+
+            // --- INITIALIZATION ---
+            formatSelect.addEventListener('change', () => {
+                updateFormatOptions();
+                renderWorkoutSummary(); // Re-render header when format changes
+            });
+            addExerciseBtn.addEventListener('click', addExercise);
+            summaryList.addEventListener('click', handleSummaryClick);
+
+            // Initial setup
+            updateFormatOptions();
+            renderWorkoutSummary();
+        });
+    </script>
+</body>
+</html>
+
