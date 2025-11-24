@@ -380,8 +380,9 @@
         let state = {
             currentRound: 0,
             accumulatedReps: 0,
-            exercises: [], 
+            exercises: [],
             roundHistory: [],
+            workoutStartTime: null, // Track when workout started
             timer: {
                 interval: null,
                 startTime: 0,
@@ -768,26 +769,38 @@
         function renderHistoryItem(w) {
             const item = document.createElement('div');
             item.className = "bg-gray-900/80 p-5 rounded-xl border border-gray-800 hover:border-amber-400/50 transition-colors animate-in fade-in slide-in-from-top-2 duration-300 relative group";
-            
+
             const exSummary = w.exercises ? w.exercises.filter(e => e.total > 0).map(e => `${e.total} ${e.name}`).join(', ') : '';
-            
-            let avgTimeStr = '';
-            if(w.roundSplits && w.roundSplits.length > 0) {
-               avgTimeStr = `<div class="mt-2 pt-2 border-t border-gray-800 text-xs text-gray-500">Last Round: ${w.roundSplits[w.roundSplits.length-1].time}</div>`;
+
+            // Support both old format (date/time) and new format (startDate/startTime)
+            const displayDate = w.startDate || w.date || 'Unknown';
+            const displayTime = w.startTime || w.time || '';
+            const duration = w.duration || '';
+            const timerMode = w.timerMode ? w.timerMode.toUpperCase() : '';
+
+            let detailsStr = '';
+            if (w.roundSplits && w.roundSplits.length > 0) {
+                detailsStr = `<div class="text-xs text-gray-500">Last Round: ${w.roundSplits[w.roundSplits.length-1].time}</div>`;
             }
 
             item.innerHTML = `
                 <div class="flex justify-between items-center mb-3">
-                    <span class="font-bold text-gray-200 text-lg">${w.date}</span>
-                    <span class="text-xs bg-gray-800 text-amber-400 px-3 py-1 rounded-full border border-gray-700 font-mono">${w.time}</span>
+                    <div>
+                        <span class="font-bold text-gray-200 text-lg">${displayDate}</span>
+                        <span class="text-gray-500 text-sm ml-2">${displayTime}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${timerMode ? `<span class="text-[10px] bg-gray-800 text-gray-400 px-2 py-0.5 rounded border border-gray-700 uppercase font-bold">${timerMode}</span>` : ''}
+                        ${duration ? `<span class="text-xs bg-gray-800 text-amber-400 px-3 py-1 rounded-full border border-gray-700 font-mono">${duration}</span>` : ''}
+                    </div>
                 </div>
                 <div class="flex gap-6 text-sm text-gray-400 mb-3 border-b border-gray-800 pb-3">
                     <span><strong class="text-amber-400 text-lg">${w.totalRounds}</strong> Rounds</span>
                     <span><strong class="text-cyan-400 text-lg">${w.totalReps}</strong> Reps</span>
                 </div>
-                <p class="text-xs text-gray-500 truncate font-mono">${exSummary || 'No reps recorded'}</p>
-                ${avgTimeStr}
-                
+                <p class="text-xs text-gray-500 truncate font-mono mb-1">${exSummary || 'No reps recorded'}</p>
+                ${detailsStr}
+
                 <button onclick="window.deleteWorkout('${w.id}')" class="absolute top-4 right-4 text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
@@ -1089,13 +1102,42 @@
 
             pauseTimer();
 
+            const endTime = new Date();
+            const startTime = state.workoutStartTime || endTime;
+
+            // Calculate total duration in seconds
+            const durationMs = endTime - startTime;
+            const durationSec = Math.floor(durationMs / 1000);
+            const durationMin = Math.floor(durationSec / 60);
+            const durationHr = Math.floor(durationMin / 60);
+
+            // Format duration string
+            let durationStr;
+            if (durationHr > 0) {
+                durationStr = `${durationHr}h ${durationMin % 60}m`;
+            } else if (durationMin > 0) {
+                durationStr = `${durationMin}m ${durationSec % 60}s`;
+            } else {
+                durationStr = `${durationSec}s`;
+            }
+
             const workoutData = {
-                date: new Date().toLocaleDateString(),
-                time: new Date().toLocaleTimeString(),
+                // Start time info
+                startDate: startTime.toLocaleDateString(),
+                startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                startTimestamp: startTime.toISOString(),
+                // End time info
+                endDate: endTime.toLocaleDateString(),
+                endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                // Duration
+                duration: durationStr,
+                durationSeconds: durationSec,
+                // Workout data
                 totalRounds: state.currentRound,
                 totalReps: state.accumulatedReps,
                 exercises: state.exercises.map(e => ({ name: e.name, total: e.totalRepsDone })),
-                roundSplits: state.roundHistory
+                roundSplits: state.roundHistory,
+                timerMode: state.timer.mode
             };
 
             const saved = await saveToHistory(workoutData);
@@ -1106,6 +1148,7 @@
                 state.accumulatedReps = 0;
                 state.exercises = [];
                 state.roundHistory = [];
+                state.workoutStartTime = null;
                 resetTimer();
                 renderWorkoutList();
                 updateStats();
@@ -1122,6 +1165,12 @@
         // --- Timer Logic ---
         function startTimer() {
             if (state.timer.isRunning) return;
+
+            // Capture workout start time on first timer start
+            if (!state.workoutStartTime) {
+                state.workoutStartTime = new Date();
+            }
+
             state.timer.startTime = Date.now() - state.timer.elapsed;
             state.timer.interval = setInterval(updateTimerDisplay, 100);
             state.timer.isRunning = true;
