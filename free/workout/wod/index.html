@@ -115,15 +115,29 @@
         <div class="bg-black/40 border-b border-gray-800 p-8 flex flex-col items-center justify-center sticky top-0 z-20 backdrop-blur-sm relative">
             
             <!-- Visible Mode Toggles -->
-            <div class="flex bg-gray-900 rounded-lg p-1 mb-6 border border-gray-700 shadow-lg">
-                <button id="mode-stopwatch" class="px-6 py-2 text-sm font-bold rounded-md transition-all bg-amber-400 text-black shadow-sm uppercase tracking-wider">Stopwatch</button>
-                <button id="mode-timer" class="px-6 py-2 text-sm font-bold rounded-md transition-all text-gray-500 hover:text-gray-300 uppercase tracking-wider">Timer</button>
+            <div class="flex w-full max-w-md bg-gray-900 rounded-lg p-1 mb-6 border border-gray-700 shadow-lg">
+                <button id="mode-fortime" class="flex-1 py-2 text-xs sm:text-sm font-bold rounded-md transition-all bg-amber-400 text-black shadow-sm uppercase tracking-wider">For Time</button>
+                <button id="mode-amrap" class="flex-1 py-2 text-xs sm:text-sm font-bold rounded-md transition-all text-gray-500 hover:text-gray-300 uppercase tracking-wider">AMRAP</button>
+                <button id="mode-emom" class="flex-1 py-2 text-xs sm:text-sm font-bold rounded-md transition-all text-gray-500 hover:text-gray-300 uppercase tracking-wider">EMOM</button>
             </div>
 
-            <!-- Timer Input (Conditional) -->
-            <div id="timer-input-group" class="hidden flex items-center gap-3 mb-6 bg-gray-900/50 p-2 rounded-lg border border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
-                <label class="text-xs text-amber-400 font-bold uppercase tracking-wider pl-2">Time Cap (Min):</label>
-                <input type="number" id="input-timer-minutes" value="10" min="1" max="60" class="w-20 bg-black border border-gray-700 rounded-md p-2 text-white text-center font-bold text-lg focus:border-amber-400 focus:outline-none transition-colors">
+            <!-- Inputs Container -->
+            <div id="timer-inputs-container" class="min-h-[3rem] mb-2 flex justify-center items-center">
+                
+                <!-- AMRAP Input -->
+                <div id="input-group-amrap" class="hidden flex items-center gap-3 bg-gray-900/50 p-2 rounded-lg border border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <label class="text-xs text-amber-400 font-bold uppercase tracking-wider pl-2">Time Cap (Min):</label>
+                    <input type="number" id="input-amrap-minutes" value="10" min="1" max="90" class="w-16 bg-black border border-gray-700 rounded-md p-1 text-white text-center font-bold text-lg focus:border-amber-400 focus:outline-none transition-colors">
+                </div>
+
+                <!-- EMOM Input -->
+                <div id="input-group-emom" class="hidden flex items-center gap-3 bg-gray-900/50 p-2 rounded-lg border border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <label class="text-xs text-amber-400 font-bold uppercase tracking-wider pl-2">Every (Min):</label>
+                    <input type="number" id="input-emom-interval" value="1" min="1" max="10" class="w-16 bg-black border border-gray-700 rounded-md p-1 text-white text-center font-bold text-lg focus:border-amber-400 focus:outline-none transition-colors">
+                    <span class="text-xs text-gray-500 font-bold">|</span>
+                    <span id="emom-round-display" class="text-xs text-cyan-400 font-bold uppercase tracking-wider pr-2">Interval 1</span>
+                </div>
+
             </div>
 
             <div id="timer-display" class="text-7xl font-mono font-bold tracking-wider mb-6 tabular-nums text-amber-400 text-glow cursor-default">00:00</div>
@@ -141,7 +155,7 @@
             </div>
             
             <!-- Round Time Indicator -->
-            <p class="mt-4 text-xs text-gray-500 uppercase tracking-widest font-bold opacity-60" id="timer-label">Current Round Time</p>
+            <p class="mt-4 text-xs text-gray-500 uppercase tracking-widest font-bold opacity-60" id="timer-label">Stopwatch Time</p>
         </div>
 
         <!-- Dashboard Stats -->
@@ -228,7 +242,7 @@
         // --- Firebase Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Data & State ---
         let app, auth, db, user, unsubscribeHistory;
@@ -254,8 +268,9 @@
                 startTime: 0,
                 elapsed: 0,
                 isRunning: false,
-                mode: 'stopwatch',
-                targetMinutes: 10
+                mode: 'fortime', // 'fortime', 'amrap', 'emom'
+                amrapCap: 10,
+                emomInterval: 1
             }
         };
 
@@ -283,10 +298,16 @@
             historyArrow: document.getElementById('history-arrow'),
             
             // Timer Settings
-            btnModeStopwatch: document.getElementById('mode-stopwatch'),
-            btnModeTimer: document.getElementById('mode-timer'),
-            groupTimerInput: document.getElementById('timer-input-group'),
-            inputTimerMinutes: document.getElementById('input-timer-minutes'),
+            btnModeFortime: document.getElementById('mode-fortime'),
+            btnModeAmrap: document.getElementById('mode-amrap'),
+            btnModeEmom: document.getElementById('mode-emom'),
+            
+            groupInputAmrap: document.getElementById('input-group-amrap'),
+            inputAmrapMinutes: document.getElementById('input-amrap-minutes'),
+            
+            groupInputEmom: document.getElementById('input-group-emom'),
+            inputEmomInterval: document.getElementById('input-emom-interval'),
+            emomRoundDisplay: document.getElementById('emom-round-display'),
 
             // Auth Elements
             authLoading: document.getElementById('auth-loading'),
@@ -305,53 +326,52 @@
 
         async function initFirebase() {
             try {
+                // The provided specific config
                 const customConfig = {
-                    apiKey: "AIzaSyASn9xe5RRKFGXNi-Vha-NunDYj1mv7D3g",
-                    authDomain: "auth.wrestling.systems", 
-                    projectId: "wrestlingsystems",
-                    storageBucket: "wrestlingsystems.firebasestorage.app",
-                    messagingSenderId: "255692661115",
-                    appId: "1:255692661115:web:c2df7cf79d3eb14b20ddde"
+                  apiKey: "AIzaSyASn9xe5RRKFGXNi-Vha-NunDYj1mv7D3g",
+                  authDomain: "auth.wrestling.systems",
+                  projectId: "wrestlingsystems",
+                  storageBucket: "wrestlingsystems.firebasestorage.app",
+                  messagingSenderId: "255692661115",
+                  appId: "1:255692661115:web:c2df7cf79d3eb14b20ddde",
+                  measurementId: "G-EXTT24L66R"
                 };
 
-                // Logic to use your config if provided, otherwise fallback to environment (for preview)
-                // This ensures the preview works for me, but uses YOUR config when you edit it.
-                const firebaseConfig = Object.keys(customConfig).length > 0 
-                    ? customConfig 
-                    : (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {});
+                // Logic: Use environment config if available (for preview), else use custom
+                const firebaseConfig = (typeof __firebase_config !== 'undefined' && __firebase_config)
+                    ? JSON.parse(__firebase_config) 
+                    : customConfig;
 
-                // If local/no config, this might fail, handle gracefully if needed for UI only
-                if(Object.keys(firebaseConfig).length > 0) {
-                    app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
 
-                    // Handle Auth Flow
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        // Environment auto-login
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        // Check if already signed in, otherwise wait for user action
-                        // signInAnonymously is a fallback if google auth fails or isn't desired immediately
-                        // But we want Google Auth primarily.
-                    }
-
-                    onAuthStateChanged(auth, (currentUser) => {
-                        user = currentUser;
-                        updateAuthUI();
-                        if (user) {
-                            setupHistoryListener();
-                        } else {
-                            els.historyList.innerHTML = '<p class="text-gray-600 text-sm text-center py-4">Sign in to view workout history.</p>';
+                // Handle Auth Flow - Immediate check/login
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    // Fallback to anonymous login so DB works immediately
+                    // The user can still click "Sign In" to upgrade to Google later
+                    onAuthStateChanged(auth, async (user) => {
+                        if (!user) {
+                             await signInAnonymously(auth);
                         }
                     });
-                } else {
-                    console.warn("No Firebase Config found. App running in offline/demo mode (Auth disabled).");
-                    els.authLoading.textContent = "Offline Mode";
                 }
+
+                onAuthStateChanged(auth, (currentUser) => {
+                    user = currentUser;
+                    updateAuthUI();
+                    if (user) {
+                        setupHistoryListener();
+                    } else {
+                        els.historyList.innerHTML = '<p class="text-gray-600 text-sm text-center py-4">Sign in to view workout history.</p>';
+                    }
+                });
+
             } catch (error) {
                 console.error("Firebase Init Error:", error);
-                els.authLoading.textContent = "Auth Error";
+                els.authLoading.textContent = "Offline Mode";
             }
         }
 
@@ -365,7 +385,7 @@
                 showToast("Signed in successfully!", "success");
             } catch (error) {
                 console.error("Login Failed:", error);
-                showToast("Login failed. See console.", "error");
+                showToast("Login failed. Check console.", "error");
             }
         }
 
@@ -375,6 +395,8 @@
                 await signOut(auth);
                 // Clean up listeners
                 if(unsubscribeHistory) unsubscribeHistory();
+                // Re-trigger anonymous login so app remains usable
+                await signInAnonymously(auth); 
                 showToast("Signed out", "neutral");
             } catch (error) {
                 console.error("Logout Failed:", error);
@@ -383,7 +405,11 @@
 
         function updateAuthUI() {
             els.authLoading.classList.add('hidden');
-            if (user) {
+            
+            // Check if user is anonymous or authenticated
+            const isAnonymous = user?.isAnonymous;
+            
+            if (user && !isAnonymous) {
                 els.btnLogin.classList.add('hidden');
                 els.userInfo.classList.remove('hidden');
                 els.userInfo.classList.add('flex');
@@ -396,10 +422,12 @@
                 }
                 els.authWarning.classList.add('hidden');
             } else {
+                // Anonymous or Not Logged In
                 els.userInfo.classList.add('hidden');
                 els.userInfo.classList.remove('flex');
                 els.btnLogin.classList.remove('hidden');
-                els.authWarning.classList.remove('hidden');
+                // Don't show auth warning if anonymous, as they can still save data locally/session
+                els.authWarning.classList.add('hidden'); 
             }
         }
 
@@ -410,19 +438,32 @@
 
             // RULE 1: Use specific path structure
             const workoutsRef = collection(db, 'artifacts', appId, 'users', user.uid, 'workouts');
-            // RULE 2: Simple query
-            const q = query(workoutsRef, orderBy('timestamp', 'desc'));
+            
+            // RULE 2: Simple query (Sort in memory to avoid index errors)
+            const q = query(workoutsRef);
 
             unsubscribeHistory = onSnapshot(q, (snapshot) => {
                 els.historyList.innerHTML = '';
-                if (snapshot.empty) {
+                
+                const workouts = [];
+                snapshot.forEach((doc) => {
+                    workouts.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort in memory (Newest first)
+                workouts.sort((a, b) => {
+                    const ta = a.timestamp?.toMillis() || 0;
+                    const tb = b.timestamp?.toMillis() || 0;
+                    return tb - ta;
+                });
+
+                if (workouts.length === 0) {
                     els.historyList.innerHTML = '<p class="text-gray-600 italic text-sm text-center">No workout history found.</p>';
                     return;
                 }
 
-                snapshot.forEach((doc) => {
-                    renderHistoryItem(doc.data());
-                });
+                workouts.forEach(w => renderHistoryItem(w));
+                
             }, (error) => {
                 console.error("History Sync Error:", error);
                 els.historyList.innerHTML = '<p class="text-red-500 text-sm text-center">Error syncing history.</p>';
@@ -431,7 +472,7 @@
 
         async function saveToHistory(workoutData) {
             if (!user) {
-                showToast("Sign in to save workouts!", "error");
+                showToast("Waiting for connection...", "error");
                 return;
             }
             if (!db) return;
@@ -452,10 +493,23 @@
                 showToast("Failed to save workout.", "error");
             }
         }
+        
+        // Expose delete function globally for the onclick handler
+        window.deleteWorkout = async (id) => {
+            if (!user || !db) return;
+            if(!confirm("Delete this record permanently?")) return;
+            try {
+                 await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'workouts', id));
+                 showToast("Record deleted", "neutral");
+            } catch(e) {
+                console.error(e);
+                showToast("Error deleting", "error");
+            }
+        };
 
         function renderHistoryItem(w) {
             const item = document.createElement('div');
-            item.className = "bg-gray-900/80 p-5 rounded-xl border border-gray-800 hover:border-amber-400/50 transition-colors animate-in fade-in slide-in-from-top-2 duration-300";
+            item.className = "bg-gray-900/80 p-5 rounded-xl border border-gray-800 hover:border-amber-400/50 transition-colors animate-in fade-in slide-in-from-top-2 duration-300 relative group";
             
             const exSummary = w.exercises ? w.exercises.filter(e => e.total > 0).map(e => `${e.total} ${e.name}`).join(', ') : '';
             
@@ -475,8 +529,13 @@
                 </div>
                 <p class="text-xs text-gray-500 truncate font-mono">${exSummary || 'No reps recorded'}</p>
                 ${avgTimeStr}
+                
+                <button onclick="window.deleteWorkout('${w.id}')" class="absolute top-4 right-4 text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
             `;
             els.historyList.appendChild(item);
+            lucide.createIcons();
         }
 
 
@@ -487,11 +546,17 @@
         els.btnLogout.addEventListener('click', logout);
 
         // Timer Mode Toggles
-        els.btnModeStopwatch.addEventListener('click', () => setTimerMode('stopwatch'));
-        els.btnModeTimer.addEventListener('click', () => setTimerMode('timer'));
+        els.btnModeFortime.addEventListener('click', () => setTimerMode('fortime'));
+        els.btnModeAmrap.addEventListener('click', () => setTimerMode('amrap'));
+        els.btnModeEmom.addEventListener('click', () => setTimerMode('emom'));
         
-        els.inputTimerMinutes.addEventListener('change', (e) => {
-            state.timer.targetMinutes = parseInt(e.target.value) || 10;
+        // Timer Inputs
+        els.inputAmrapMinutes.addEventListener('change', (e) => {
+            state.timer.amrapCap = parseInt(e.target.value) || 10;
+            if(!state.timer.isRunning) updateTimerDisplay();
+        });
+        els.inputEmomInterval.addEventListener('change', (e) => {
+            state.timer.emomInterval = parseInt(e.target.value) || 1;
             if(!state.timer.isRunning) updateTimerDisplay();
         });
 
@@ -529,21 +594,36 @@
 
         function setTimerMode(mode) {
             state.timer.mode = mode;
-            if (mode === 'stopwatch') {
-                els.btnModeStopwatch.classList.add('bg-amber-400', 'text-black', 'shadow-sm');
-                els.btnModeStopwatch.classList.remove('text-gray-500', 'hover:text-gray-300');
-                els.btnModeTimer.classList.remove('bg-amber-400', 'text-black', 'shadow-sm');
-                els.btnModeTimer.classList.add('text-gray-500', 'hover:text-gray-300');
-                els.groupTimerInput.classList.add('hidden');
-                els.timerLabel.textContent = "Current Round (Up)";
-            } else {
-                els.btnModeTimer.classList.add('bg-amber-400', 'text-black', 'shadow-sm');
-                els.btnModeTimer.classList.remove('text-gray-500', 'hover:text-gray-300');
-                els.btnModeStopwatch.classList.remove('bg-amber-400', 'text-black', 'shadow-sm');
-                els.btnModeStopwatch.classList.add('text-gray-500', 'hover:text-gray-300');
-                els.groupTimerInput.classList.remove('hidden');
-                els.timerLabel.textContent = "Current Round (Down)";
+            
+            // Helper to set button active/inactive
+            const setActive = (btn, active) => {
+                if (active) {
+                    btn.classList.add('bg-amber-400', 'text-black', 'shadow-sm');
+                    btn.classList.remove('text-gray-500', 'hover:text-gray-300');
+                } else {
+                    btn.classList.remove('bg-amber-400', 'text-black', 'shadow-sm');
+                    btn.classList.add('text-gray-500', 'hover:text-gray-300');
+                }
+            };
+
+            setActive(els.btnModeFortime, mode === 'fortime');
+            setActive(els.btnModeAmrap, mode === 'amrap');
+            setActive(els.btnModeEmom, mode === 'emom');
+
+            // Toggle Inputs
+            els.groupInputAmrap.classList.add('hidden');
+            els.groupInputEmom.classList.add('hidden');
+            
+            if (mode === 'fortime') {
+                els.timerLabel.textContent = "Stopwatch Time";
+            } else if (mode === 'amrap') {
+                els.groupInputAmrap.classList.remove('hidden');
+                els.timerLabel.textContent = "Time Remaining";
+            } else if (mode === 'emom') {
+                els.groupInputEmom.classList.remove('hidden');
+                els.timerLabel.textContent = "Next Interval In";
             }
+            
             resetTimer();
         }
 
@@ -765,6 +845,9 @@
         function resetTimer() {
             pauseTimer();
             state.timer.elapsed = 0;
+            if (state.timer.mode === 'emom') {
+                 els.emomRoundDisplay.textContent = `Interval 1`;
+            }
             updateTimerDisplay();
         }
 
@@ -780,18 +863,58 @@
             let isNegative = false;
             let displayColorClass = 'text-amber-400';
 
-            if (state.timer.mode === 'timer') {
-                const targetMs = state.timer.targetMinutes * 60 * 1000;
+            // MODE SPECIFIC LOGIC
+            if (state.timer.mode === 'fortime') {
+                // Count UP
+                displayTime = diff;
+            } 
+            else if (state.timer.mode === 'amrap') {
+                // Count DOWN from Cap
+                const targetMs = state.timer.amrapCap * 60 * 1000;
                 let remaining = targetMs - diff;
+                
                 if (remaining < 0) {
                     isNegative = true;
                     remaining = Math.abs(remaining);
-                    displayColorClass = 'text-red-500';
+                    displayColorClass = 'text-red-500'; // Overtime
                 }
                 displayTime = remaining;
             }
+            else if (state.timer.mode === 'emom') {
+                // Loop based on Interval
+                const intervalMs = state.timer.emomInterval * 60 * 1000;
+                
+                // Calculate which interval we are in
+                const currentIntervalIndex = Math.floor(diff / intervalMs) + 1;
+                els.emomRoundDisplay.textContent = `Interval ${currentIntervalIndex}`;
 
-            const totalSeconds = Math.floor(displayTime / 1000);
+                // Calculate time remaining in THIS interval
+                let remainingInInterval = intervalMs - (diff % intervalMs);
+                
+                // When exactly at 0/reset, show full interval
+                if (remainingInInterval === intervalMs) remainingInInterval = 0; 
+
+                displayTime = remainingInInterval;
+                
+                // Visual Alert near end of interval (last 3 seconds)
+                if (remainingInInterval < 3100 && state.timer.isRunning) {
+                    displayColorClass = 'text-cyan-400';
+                }
+            }
+
+            // Formatting
+            let totalSeconds;
+            if (state.timer.mode !== 'fortime') {
+                totalSeconds = Math.ceil(displayTime / 1000);
+                 // Fix: don't show 60s, show 00s if modulo
+                 if (state.timer.mode === 'emom' && totalSeconds === state.timer.emomInterval * 60) totalSeconds = 0;
+            } else {
+                totalSeconds = Math.floor(displayTime / 1000);
+            }
+            
+            // Edge case for AMRAP hitting 0 exactly
+            if (totalSeconds < 0) totalSeconds = 0;
+
             const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
             const seconds = (totalSeconds % 60).toString().padStart(2, '0');
             
