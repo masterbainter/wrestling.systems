@@ -93,8 +93,29 @@
         </header>
 
         <!-- Timer Section -->
-        <div class="bg-black/40 border-b border-gray-800 p-8 flex flex-col items-center justify-center sticky top-0 z-20 backdrop-blur-sm">
-            <div id="timer-display" class="text-7xl font-mono font-bold tracking-wider mb-6 tabular-nums text-amber-400 text-glow">00:00</div>
+        <div class="bg-black/40 border-b border-gray-800 p-8 flex flex-col items-center justify-center sticky top-0 z-20 backdrop-blur-sm relative">
+            
+            <!-- Timer Settings Toggle -->
+            <button id="btn-timer-settings" class="absolute top-4 right-4 text-gray-500 hover:text-amber-400 transition-colors" title="Timer Settings">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Timer Settings Panel -->
+            <div id="timer-settings-panel" class="hidden absolute top-12 right-4 bg-gray-900 border border-gray-700 p-4 rounded-xl z-30 shadow-2xl w-64 backdrop-blur-md">
+                <h4 class="text-amber-400 font-bold mb-3 text-sm uppercase tracking-wider">Timer Settings</h4>
+                
+                <div class="flex bg-gray-800 rounded-lg p-1 mb-3">
+                    <button id="mode-stopwatch" class="flex-1 py-1 text-xs font-bold rounded-md transition-all bg-amber-400 text-black shadow-sm">Stopwatch</button>
+                    <button id="mode-timer" class="flex-1 py-1 text-xs font-bold rounded-md transition-all text-gray-400 hover:text-white">Timer</button>
+                </div>
+
+                <div id="timer-input-group" class="hidden space-y-2">
+                    <label class="text-xs text-gray-400 font-bold uppercase">Time Cap (Minutes)</label>
+                    <input type="number" id="input-timer-minutes" value="10" min="1" max="60" class="w-full bg-black border border-gray-700 rounded-lg p-2 text-white text-center font-bold focus:border-amber-400 focus:outline-none">
+                </div>
+            </div>
+
+            <div id="timer-display" class="text-7xl font-mono font-bold tracking-wider mb-6 tabular-nums text-amber-400 text-glow cursor-pointer" title="Click to edit timer">00:00</div>
             <div class="flex gap-4 w-full justify-center">
                 <button id="btn-start" class="flex-1 max-w-[140px] flex justify-center items-center gap-2 bg-transparent border-2 border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-black px-6 py-3 rounded-xl font-bold transition-all btn-glow uppercase tracking-wider">
                     <i data-lucide="play" class="w-5 h-5"></i> Start
@@ -106,6 +127,9 @@
                     <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
                 </button>
             </div>
+            
+            <!-- Round Time Indicator -->
+            <p class="mt-2 text-xs text-gray-500 uppercase tracking-widest font-bold" id="timer-label">Current Round Time</p>
         </div>
 
         <!-- Dashboard Stats -->
@@ -205,11 +229,14 @@
             currentRound: 0,
             accumulatedReps: 0,
             exercises: [], 
+            roundHistory: [], // Store times for each round
             timer: {
                 interval: null,
-                startTime: 0,
-                elapsed: 0,
-                isRunning: false
+                startTime: 0, // When the *current* round started
+                elapsed: 0,   // Elapsed time for *current* round paused state
+                isRunning: false,
+                mode: 'stopwatch', // 'stopwatch' or 'timer'
+                targetMinutes: 10
             }
         };
 
@@ -222,6 +249,7 @@
             workoutList: document.getElementById('workout-list'),
             emptyState: document.getElementById('empty-state'),
             timerDisplay: document.getElementById('timer-display'),
+            timerLabel: document.getElementById('timer-label'),
             btnStart: document.getElementById('btn-start'),
             btnPause: document.getElementById('btn-pause'),
             btnResetTimer: document.getElementById('btn-reset-timer'),
@@ -234,15 +262,43 @@
             historyList: document.getElementById('history-list'),
             btnToggleHistory: document.getElementById('btn-toggle-history'),
             historyArrow: document.getElementById('history-arrow'),
-            btnClearHistory: document.getElementById('btn-clear-history')
+            btnClearHistory: document.getElementById('btn-clear-history'),
+            // Timer Settings
+            btnTimerSettings: document.getElementById('btn-timer-settings'),
+            panelTimerSettings: document.getElementById('timer-settings-panel'),
+            btnModeStopwatch: document.getElementById('mode-stopwatch'),
+            btnModeTimer: document.getElementById('mode-timer'),
+            groupTimerInput: document.getElementById('timer-input-group'),
+            inputTimerMinutes: document.getElementById('input-timer-minutes')
         };
 
         // --- Init ---
         lucide.createIcons();
         loadHistory();
+        updateTimerDisplay(); // Set initial 00:00
 
         // --- Event Listeners ---
         
+        // Timer Settings
+        els.btnTimerSettings.addEventListener('click', (e) => {
+            e.stopPropagation();
+            els.panelTimerSettings.classList.toggle('hidden');
+        });
+        
+        document.addEventListener('click', (e) => {
+             if (!els.panelTimerSettings.contains(e.target) && e.target !== els.btnTimerSettings) {
+                 els.panelTimerSettings.classList.add('hidden');
+             }
+        });
+
+        els.btnModeStopwatch.addEventListener('click', () => setTimerMode('stopwatch'));
+        els.btnModeTimer.addEventListener('click', () => setTimerMode('timer'));
+        
+        els.inputTimerMinutes.addEventListener('change', (e) => {
+            state.timer.targetMinutes = parseInt(e.target.value) || 10;
+            if(!state.timer.isRunning) updateTimerDisplay();
+        });
+
         els.inputSearch.addEventListener('input', (e) => handleSearch(e.target.value));
         els.inputSearch.addEventListener('focus', () => { if(els.inputSearch.value) handleSearch(els.inputSearch.value); });
         
@@ -283,6 +339,30 @@
 
         // --- Core Functions ---
 
+        function setTimerMode(mode) {
+            state.timer.mode = mode;
+            
+            // UI Updates for Mode Switch
+            if (mode === 'stopwatch') {
+                els.btnModeStopwatch.classList.add('bg-amber-400', 'text-black', 'shadow-sm');
+                els.btnModeStopwatch.classList.remove('text-gray-400', 'hover:text-white');
+                els.btnModeTimer.classList.remove('bg-amber-400', 'text-black', 'shadow-sm');
+                els.btnModeTimer.classList.add('text-gray-400', 'hover:text-white');
+                els.groupTimerInput.classList.add('hidden');
+                els.timerLabel.textContent = "Current Round (Up)";
+            } else {
+                els.btnModeTimer.classList.add('bg-amber-400', 'text-black', 'shadow-sm');
+                els.btnModeTimer.classList.remove('text-gray-400', 'hover:text-white');
+                els.btnModeStopwatch.classList.remove('bg-amber-400', 'text-black', 'shadow-sm');
+                els.btnModeStopwatch.classList.add('text-gray-400', 'hover:text-white');
+                els.groupTimerInput.classList.remove('hidden');
+                els.timerLabel.textContent = "Current Round (Down)";
+            }
+            
+            resetTimer();
+        }
+
+        // ... (Search, Add, Remove, Render functions unchanged) ...
         function handleSearch(query) {
             if (!query) {
                 els.listSuggestions.classList.add('hidden');
@@ -397,7 +477,7 @@
         }
 
         // --- Interaction Logic ---
-
+        // ... (AdjustReps, ToggleComplete, RemoveExercise unchanged) ...
         window.adjustReps = (id, amount) => {
             const ex = state.exercises.find(e => e.id === id);
             if (ex && !ex.completed) {
@@ -425,6 +505,7 @@
 
         window.removeExercise = removeExercise; 
 
+
         function finishRound() {
             if (state.exercises.length === 0) {
                 showToast("Add exercises first!", "error");
@@ -432,7 +513,6 @@
             }
 
             let anythingDone = false;
-
             state.exercises.forEach(ex => {
                 if (ex.completed) {
                     ex.totalRepsDone += ex.currentReps;
@@ -446,6 +526,15 @@
                 if(!confirm("No exercises were marked as 'Done'. Advance round anyway?")) return;
             }
 
+            // --- Record Round Logic ---
+            const roundTime = els.timerDisplay.textContent;
+            state.roundHistory.push({ round: state.currentRound + 1, time: roundTime });
+            
+            // --- Reset Timer for Next Round (Lap) ---
+            state.timer.elapsed = 0;
+            state.timer.startTime = Date.now(); // Reset 'Start' point to now
+            updateTimerDisplay(); // Refresh immediately
+
             state.currentRound++;
             updateStats();
             renderWorkoutList();
@@ -453,10 +542,11 @@
             els.btnNextRound.classList.remove('ring-2', 'ring-offset-2', 'ring-amber-400', 'ring-offset-black', 'bg-amber-400', 'text-black');
             els.btnNextRound.classList.add('bg-transparent', 'text-amber-400');
             
-            showToast(`Round ${state.currentRound} Complete!`, "success");
+            showToast(`Round ${state.currentRound} Complete! (${roundTime})`, "success");
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // ... (FinishWorkout updated to use roundHistory) ...
         function updateStats() {
             els.statRounds.textContent = state.currentRound;
             els.statReps.textContent = state.accumulatedReps;
@@ -473,13 +563,18 @@
 
             pauseTimer();
 
+            // Calculate total time by summing rounds or just global time?
+            // Let's use the last recorded round time as "finish time" or sum of rounds.
+            // For simplicity in display, we show the timestamp.
+            
             const workoutData = {
                 id: Date.now(),
                 date: new Date().toLocaleDateString(),
-                time: els.timerDisplay.textContent,
+                time: new Date().toLocaleTimeString(), // Finished At
                 totalRounds: state.currentRound,
                 totalReps: state.accumulatedReps,
-                exercises: state.exercises.map(e => ({ name: e.name, total: e.totalRepsDone }))
+                exercises: state.exercises.map(e => ({ name: e.name, total: e.totalRepsDone })),
+                roundSplits: state.roundHistory
             };
 
             saveToHistory(workoutData);
@@ -487,6 +582,7 @@
             state.currentRound = 0;
             state.accumulatedReps = 0;
             state.exercises = [];
+            state.roundHistory = [];
             resetTimer();
             renderWorkoutList();
             updateStats();
@@ -500,8 +596,9 @@
         function startTimer() {
             if (state.timer.isRunning) return;
             
+            // Adjust start time based on elapsed, so pausing works correctly
             state.timer.startTime = Date.now() - state.timer.elapsed;
-            state.timer.interval = setInterval(updateTimerDisplay, 1000);
+            state.timer.interval = setInterval(updateTimerDisplay, 100); // 100ms for smoother updates
             state.timer.isRunning = true;
             
             els.btnStart.classList.add('hidden');
@@ -512,6 +609,7 @@
             if (!state.timer.isRunning) return;
             
             clearInterval(state.timer.interval);
+            // Calculate actual elapsed time since round started
             state.timer.elapsed = Date.now() - state.timer.startTime;
             state.timer.isRunning = false;
             
@@ -522,22 +620,50 @@
         function resetTimer() {
             pauseTimer();
             state.timer.elapsed = 0;
-            els.timerDisplay.textContent = "00:00";
+            updateTimerDisplay();
         }
 
         function updateTimerDisplay() {
-            const now = Date.now();
-            const diff = now - state.timer.startTime;
+            let diff;
             
-            const totalSeconds = Math.floor(diff / 1000);
+            if (state.timer.isRunning) {
+                diff = Date.now() - state.timer.startTime;
+            } else {
+                diff = state.timer.elapsed;
+            }
+
+            let displayTime = diff;
+            let isNegative = false;
+            let displayColorClass = 'text-amber-400';
+
+            if (state.timer.mode === 'timer') {
+                const targetMs = state.timer.targetMinutes * 60 * 1000;
+                let remaining = targetMs - diff;
+                
+                if (remaining < 0) {
+                    isNegative = true;
+                    remaining = Math.abs(remaining);
+                    displayColorClass = 'text-red-500'; // Overtime Color
+                }
+                displayTime = remaining;
+            }
+
+            const totalSeconds = Math.floor(displayTime / 1000);
             const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
             const seconds = (totalSeconds % 60).toString().padStart(2, '0');
             
-            els.timerDisplay.textContent = `${minutes}:${seconds}`;
+            const prefix = isNegative ? '-' : '';
+            els.timerDisplay.textContent = `${prefix}${minutes}:${seconds}`;
+            
+            // Update Color
+            els.timerDisplay.className = `text-7xl font-mono font-bold tracking-wider mb-6 tabular-nums ${displayColorClass} text-glow cursor-pointer`;
+            
+            // Update Tab Title
+            document.title = `${prefix}${minutes}:${seconds} - WOD Track`;
         }
 
         // --- Storage Logic ---
-
+        // ... (SaveToHistory, LoadHistory, ShowToast unchanged) ...
         function saveToHistory(workout) {
             const history = JSON.parse(localStorage.getItem('wod_history') || '[]');
             history.unshift(workout); 
@@ -560,6 +686,12 @@
                 
                 const exSummary = w.exercises.filter(e => e.total > 0).map(e => `${e.total} ${e.name}`).join(', ');
                 
+                // Optional: Show avg round time if available
+                let avgTimeStr = '';
+                if(w.roundSplits && w.roundSplits.length > 0) {
+                   avgTimeStr = `<div class="mt-2 pt-2 border-t border-gray-800 text-xs text-gray-500">Last Round: ${w.roundSplits[w.roundSplits.length-1].time}</div>`;
+                }
+
                 item.innerHTML = `
                     <div class="flex justify-between items-center mb-3">
                         <span class="font-bold text-gray-200 text-lg">${w.date}</span>
@@ -570,12 +702,11 @@
                         <span><strong class="text-cyan-400 text-lg">${w.totalReps}</strong> Reps</span>
                     </div>
                     <p class="text-xs text-gray-500 truncate font-mono">${exSummary || 'No reps recorded'}</p>
+                    ${avgTimeStr}
                 `;
                 els.historyList.appendChild(item);
             });
         }
-
-        // --- Utilities ---
 
         function showToast(message, type = 'normal') {
             const toast = document.createElement('div');
