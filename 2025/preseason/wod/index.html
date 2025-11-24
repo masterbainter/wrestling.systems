@@ -95,27 +95,20 @@
         <!-- Timer Section -->
         <div class="bg-black/40 border-b border-gray-800 p-8 flex flex-col items-center justify-center sticky top-0 z-20 backdrop-blur-sm relative">
             
-            <!-- Timer Settings Toggle -->
-            <button id="btn-timer-settings" class="absolute top-4 right-4 text-gray-500 hover:text-amber-400 transition-colors" title="Timer Settings">
-                <i data-lucide="settings" class="w-5 h-5"></i>
-            </button>
-
-            <!-- Timer Settings Panel -->
-            <div id="timer-settings-panel" class="hidden absolute top-12 right-4 bg-gray-900 border border-gray-700 p-4 rounded-xl z-30 shadow-2xl w-64 backdrop-blur-md">
-                <h4 class="text-amber-400 font-bold mb-3 text-sm uppercase tracking-wider">Timer Settings</h4>
-                
-                <div class="flex bg-gray-800 rounded-lg p-1 mb-3">
-                    <button id="mode-stopwatch" class="flex-1 py-1 text-xs font-bold rounded-md transition-all bg-amber-400 text-black shadow-sm">Stopwatch</button>
-                    <button id="mode-timer" class="flex-1 py-1 text-xs font-bold rounded-md transition-all text-gray-400 hover:text-white">Timer</button>
-                </div>
-
-                <div id="timer-input-group" class="hidden space-y-2">
-                    <label class="text-xs text-gray-400 font-bold uppercase">Time Cap (Minutes)</label>
-                    <input type="number" id="input-timer-minutes" value="10" min="1" max="60" class="w-full bg-black border border-gray-700 rounded-lg p-2 text-white text-center font-bold focus:border-amber-400 focus:outline-none">
-                </div>
+            <!-- Visible Mode Toggles -->
+            <div class="flex bg-gray-900 rounded-lg p-1 mb-6 border border-gray-700 shadow-lg">
+                <button id="mode-stopwatch" class="px-6 py-2 text-sm font-bold rounded-md transition-all bg-amber-400 text-black shadow-sm uppercase tracking-wider">Stopwatch</button>
+                <button id="mode-timer" class="px-6 py-2 text-sm font-bold rounded-md transition-all text-gray-500 hover:text-gray-300 uppercase tracking-wider">Timer</button>
             </div>
 
-            <div id="timer-display" class="text-7xl font-mono font-bold tracking-wider mb-6 tabular-nums text-amber-400 text-glow cursor-pointer" title="Click to edit timer">00:00</div>
+            <!-- Timer Input (Conditional - appears when Timer mode is active) -->
+            <div id="timer-input-group" class="hidden flex items-center gap-3 mb-6 bg-gray-900/50 p-2 rounded-lg border border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+                <label class="text-xs text-amber-400 font-bold uppercase tracking-wider pl-2">Time Cap (Min):</label>
+                <input type="number" id="input-timer-minutes" value="10" min="1" max="60" class="w-20 bg-black border border-gray-700 rounded-md p-2 text-white text-center font-bold text-lg focus:border-amber-400 focus:outline-none transition-colors">
+            </div>
+
+            <div id="timer-display" class="text-7xl font-mono font-bold tracking-wider mb-6 tabular-nums text-amber-400 text-glow cursor-default">00:00</div>
+            
             <div class="flex gap-4 w-full justify-center">
                 <button id="btn-start" class="flex-1 max-w-[140px] flex justify-center items-center gap-2 bg-transparent border-2 border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-black px-6 py-3 rounded-xl font-bold transition-all btn-glow uppercase tracking-wider">
                     <i data-lucide="play" class="w-5 h-5"></i> Start
@@ -129,7 +122,7 @@
             </div>
             
             <!-- Round Time Indicator -->
-            <p class="mt-2 text-xs text-gray-500 uppercase tracking-widest font-bold" id="timer-label">Current Round Time</p>
+            <p class="mt-4 text-xs text-gray-500 uppercase tracking-widest font-bold opacity-60" id="timer-label">Current Round Time</p>
         </div>
 
         <!-- Dashboard Stats -->
@@ -264,8 +257,6 @@
             historyArrow: document.getElementById('history-arrow'),
             btnClearHistory: document.getElementById('btn-clear-history'),
             // Timer Settings
-            btnTimerSettings: document.getElementById('btn-timer-settings'),
-            panelTimerSettings: document.getElementById('timer-settings-panel'),
             btnModeStopwatch: document.getElementById('mode-stopwatch'),
             btnModeTimer: document.getElementById('mode-timer'),
             groupTimerInput: document.getElementById('timer-input-group'),
@@ -279,18 +270,7 @@
 
         // --- Event Listeners ---
         
-        // Timer Settings
-        els.btnTimerSettings.addEventListener('click', (e) => {
-            e.stopPropagation();
-            els.panelTimerSettings.classList.toggle('hidden');
-        });
-        
-        document.addEventListener('click', (e) => {
-             if (!els.panelTimerSettings.contains(e.target) && e.target !== els.btnTimerSettings) {
-                 els.panelTimerSettings.classList.add('hidden');
-             }
-        });
-
+        // Timer Mode Toggles
         els.btnModeStopwatch.addEventListener('click', () => setTimerMode('stopwatch'));
         els.btnModeTimer.addEventListener('click', () => setTimerMode('timer'));
         
@@ -344,17 +324,27 @@
             
             // UI Updates for Mode Switch
             if (mode === 'stopwatch') {
+                // Active State for Stopwatch
                 els.btnModeStopwatch.classList.add('bg-amber-400', 'text-black', 'shadow-sm');
-                els.btnModeStopwatch.classList.remove('text-gray-400', 'hover:text-white');
+                els.btnModeStopwatch.classList.remove('text-gray-500', 'hover:text-gray-300');
+                
+                // Inactive State for Timer
                 els.btnModeTimer.classList.remove('bg-amber-400', 'text-black', 'shadow-sm');
-                els.btnModeTimer.classList.add('text-gray-400', 'hover:text-white');
+                els.btnModeTimer.classList.add('text-gray-500', 'hover:text-gray-300');
+                
+                // Hide Inputs
                 els.groupTimerInput.classList.add('hidden');
                 els.timerLabel.textContent = "Current Round (Up)";
             } else {
+                // Active State for Timer
                 els.btnModeTimer.classList.add('bg-amber-400', 'text-black', 'shadow-sm');
-                els.btnModeTimer.classList.remove('text-gray-400', 'hover:text-white');
+                els.btnModeTimer.classList.remove('text-gray-500', 'hover:text-gray-300');
+                
+                // Inactive State for Stopwatch
                 els.btnModeStopwatch.classList.remove('bg-amber-400', 'text-black', 'shadow-sm');
-                els.btnModeStopwatch.classList.add('text-gray-400', 'hover:text-white');
+                els.btnModeStopwatch.classList.add('text-gray-500', 'hover:text-gray-300');
+                
+                // Show Inputs
                 els.groupTimerInput.classList.remove('hidden');
                 els.timerLabel.textContent = "Current Round (Down)";
             }
