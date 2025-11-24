@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOD Track | Build Strength Anywhere</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000; /* Pure Black */
+            color: #e5e7eb; /* Gray-200 */
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ca8a04; /* Amber-600 */
+        }
+
+        /* Rep Down Specific Styles */
+        .text-glow {
+            text-shadow: 0 0 10px currentColor;
+        }
+        
+        .container-glow {
+            box-shadow: 0 0 30px rgba(250, 204, 21, 0.15), inset 0 0 20px rgba(250, 204, 21, 0.05);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+        }
+        
+        .btn-glow {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.6);
+        }
+
+        .exercise-card {
+            transition: all 0.3s ease;
+        }
+        .exercise-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(250, 204, 21, 0.6);
+        }
+
+        /* Toast Animation */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8 px-4 bg-black bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-black to-black">
+
+    <!-- Main Container -->
+    <main class="w-full max-w-2xl bg-gray-900/80 backdrop-blur-md rounded-2xl container-glow overflow-hidden relative">
+        
+        <!-- Header Section -->
+        <header class="p-6 sm:p-8 text-center border-b border-gray-800 relative">
+            
+            <!-- Auth Status / Login -->
+            <div class="absolute top-4 right-4 flex items-center gap-3">
+                <div id="auth-loading" class="animate-pulse text-amber-400 text-xs font-mono">Connecting...</div>
+                
+                <div id="user-info" class="hidden flex items-center gap-3 bg-gray-900 border border-gray-700 rounded-full px-3 py-1">
+                    <img id="user-avatar" src="" alt="User" class="w-6 h-6 rounded-full hidden">
+                    <span id="user-name" class="text-xs text-gray-400 font-bold hidden sm:block">User</span>
+                    <button id="btn-logout" class="text-xs text-red-400 hover:text-white transition-colors">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <button id="btn-login" class="hidden flex items-center gap-2 bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-full font-bold text-xs transition-colors shadow-lg">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27c3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10c5.35 0 9.25-3.67 9.25-9.09c0-1.15-.15-1.81-.15-1.81Z"/></svg>
+                    Sign In
+                </button>
+            </div>
+
+            <div class="flex justify-center items-center gap-3 mb-2 mt-4 sm:mt-0">
+                <i data-lucide="dumbbell" class="w-10 h-10 text-amber-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]"></i>
+                <h1 class="text-4xl font-extrabold text-amber-400 tracking-tight text-glow uppercase italic">WOD Track</h1>
+            </div>
+            <p class="text-gray-400 font-medium">Build Strength Anywhere.</p>
+        </header>
+
+        <!-- Timer Section -->
+        <div class="bg-black/40 border-b border-gray-800 p-8 flex flex-col items-center justify-center sticky top-0 z-20 backdrop-blur-sm relative">
+            
+            <!-- Visible Mode Toggles -->
+            <div class="flex bg-gray-900 rounded-lg p-1 mb-6 border border-gray-700 shadow-lg">
+                <button id="mode-stopwatch" class="px-6 py-2 text-sm font-bold rounded-md transition-all bg-amber-400 text-black shadow-sm uppercase tracking-wider">Stopwatch</button>
+                <button id="mode-timer" class="px-6 py-2 text-sm font-bold rounded-md transition-all text-gray-500 hover:text-gray-300 uppercase tracking-wider">Timer</button>
+            </div>
+
+            <!-- Timer Input (Conditional) -->
+            <div id="timer-input-group" class="hidden flex items-center gap-3 mb-6 bg-gray-900/50 p-2 rounded-lg border border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+                <label class="text-xs text-amber-400 font-bold uppercase tracking-wider pl-2">Time Cap (Min):</label>
+                <input type="number" id="input-timer-minutes" value="10" min="1" max="60" class="w-20 bg-black border border-gray-700 rounded-md p-2 text-white text-center font-bold text-lg focus:border-amber-400 focus:outline-none transition-colors">
+            </div>
+
+            <div id="timer-display" class="text-7xl font-mono font-bold tracking-wider mb-6 tabular-nums text-amber-400 text-glow cursor-default">00:00</div>
+            
+            <div class="flex gap-4 w-full justify-center">
+                <button id="btn-start" class="flex-1 max-w-[140px] flex justify-center items-center gap-2 bg-transparent border-2 border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-black px-6 py-3 rounded-xl font-bold transition-all btn-glow uppercase tracking-wider">
+                    <i data-lucide="play" class="w-5 h-5"></i> Start
+                </button>
+                <button id="btn-pause" class="hidden flex-1 max-w-[140px] flex justify-center items-center gap-2 bg-transparent border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black px-6 py-3 rounded-xl font-bold transition-all uppercase tracking-wider shadow-[0_0_10px_rgba(34,211,238,0.3)] hover:shadow-[0_0_20px_rgba(34,211,238,0.6)]">
+                    <i data-lucide="pause" class="w-5 h-5"></i> Pause
+                </button>
+                <button id="btn-reset-timer" class="flex items-center justify-center gap-2 bg-transparent border-2 border-gray-700 hover:border-gray-500 text-gray-500 hover:text-gray-300 px-4 py-3 rounded-xl font-bold transition-colors">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- Round Time Indicator -->
+            <p class="mt-4 text-xs text-gray-500 uppercase tracking-widest font-bold opacity-60" id="timer-label">Current Round Time</p>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="grid grid-cols-3 gap-px bg-gray-800 border-b border-gray-800">
+            <div class="bg-gray-900/60 p-4 text-center group hover:bg-gray-800 transition-colors">
+                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Rounds</p>
+                <p id="stat-rounds" class="text-3xl font-bold text-amber-400 text-glow">0</p>
+            </div>
+            <div class="bg-gray-900/60 p-4 text-center group hover:bg-gray-800 transition-colors">
+                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Total Reps</p>
+                <p id="stat-reps" class="text-3xl font-bold text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">0</p>
+            </div>
+            <div class="bg-gray-900/60 p-4 text-center group hover:bg-gray-800 transition-colors">
+                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Exercises</p>
+                <p id="stat-count" class="text-3xl font-bold text-gray-200">0</p>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="p-6 bg-transparent space-y-4">
+            <div class="relative">
+                <div class="flex gap-3">
+                    <div class="relative flex-grow">
+                        <input type="text" id="exercise-search" placeholder="Add Exercise (e.g., 'Pushups')" 
+                            class="w-full p-4 bg-gray-800 border-2 border-gray-700 text-white rounded-xl focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none transition-all placeholder-gray-500 font-bold text-lg" autocomplete="off">
+                        <!-- Autocomplete Dropdown -->
+                        <ul id="search-suggestions" class="absolute left-0 right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-30 max-h-60 overflow-y-auto hidden">
+                            <!-- Suggestions injected here -->
+                        </ul>
+                    </div>
+                    <input type="number" id="default-reps" placeholder="10" value="10" min="1"
+                        class="w-24 p-4 bg-gray-800 border-2 border-gray-700 text-amber-400 rounded-xl focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none text-center font-bold text-xl">
+                    <button id="btn-add-exercise" class="bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-amber-400 text-amber-400 p-4 rounded-xl transition-all">
+                        <i data-lucide="plus" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Workout List -->
+        <div id="workout-list" class="px-6 pb-6 space-y-4 min-h-[100px]">
+            <!-- Empty State -->
+            <div id="empty-state" class="text-center py-12 opacity-40 border-2 border-dashed border-gray-800 rounded-xl">
+                <i data-lucide="clipboard-list" class="w-16 h-16 mx-auto text-gray-600 mb-4"></i>
+                <p class="text-gray-500 text-lg">No exercises added.<br>Search above to start.</p>
+            </div>
+        </div>
+
+        <!-- Controls Footer -->
+        <div class="p-6 bg-black/60 border-t border-gray-800 flex flex-col gap-4 backdrop-blur-md">
+            <button id="btn-next-round" class="w-full bg-transparent hover:bg-amber-400 text-amber-400 hover:text-black py-4 px-6 rounded-xl font-bold text-xl border-2 border-amber-400 transition-all btn-glow flex justify-center items-center gap-3 uppercase tracking-wide">
+                Start Next Round <i data-lucide="arrow-right" class="w-6 h-6"></i>
+            </button>
+            <button id="btn-finish-workout" class="w-full text-red-500 hover:text-red-400 font-semibold text-sm transition-colors flex justify-center items-center gap-2">
+                <i data-lucide="save" class="w-4 h-4"></i> End & Save Workout
+            </button>
+        </div>
+
+        <!-- History Toggle -->
+        <div class="bg-gray-900 border-t border-gray-800">
+            <button id="btn-toggle-history" class="w-full p-3 text-sm text-gray-500 hover:text-amber-400 font-medium flex items-center justify-center gap-2 transition-colors">
+                <span>View History</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" id="history-arrow"></i>
+            </button>
+        </div>
+
+        <!-- History Section (Hidden by default) -->
+        <div id="history-section" class="hidden border-t border-gray-800 bg-black p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-xl text-amber-400 text-glow">Past Workouts</h3>
+                <div id="auth-warning" class="text-xs text-red-400 hidden">Sign in to sync history</div>
+            </div>
+            <div id="history-list" class="space-y-4">
+                <!-- History Items injected here -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3"></div>
+
+    <script type="module">
+        // --- Firebase Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Data & State ---
+        let app, auth, db, user, unsubscribeHistory;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'wod-track-default';
+        
+        const PREDEFINED_EXERCISES = [
+            "Air Squats", "Back Squats", "Bar Muscle-ups", "Bench Press", "Box Jumps", 
+            "Burpees", "Clean & Jerk", "Deadlifts", "Double Unders", "Dumbbell Snatch", 
+            "Front Squats", "Handstand Push-ups", "Handstand Walk", "Jumping Jacks", 
+            "Kettlebell Swings", "Lunges", "Muscle-ups", "Overhead Squats", "Pistol Squats", 
+            "Plank (sec)", "Pull-ups", "Push-ups", "Ring Dips", "Rope Climbs", "Rowing (cal)", 
+            "Running (m)", "Sit-ups", "Snatch", "Strict Press", "Thrusters", "Toes-to-Bar", 
+            "Wall Balls", "Walking Lunges", "V-ups"
+        ];
+
+        let state = {
+            currentRound: 0,
+            accumulatedReps: 0,
+            exercises: [], 
+            roundHistory: [],
+            timer: {
+                interval: null,
+                startTime: 0,
+                elapsed: 0,
+                isRunning: false,
+                mode: 'stopwatch',
+                targetMinutes: 10
+            }
+        };
+
+        // --- DOM Elements ---
+        const els = {
+            inputSearch: document.getElementById('exercise-search'),
+            inputReps: document.getElementById('default-reps'),
+            listSuggestions: document.getElementById('search-suggestions'),
+            btnAdd: document.getElementById('btn-add-exercise'),
+            workoutList: document.getElementById('workout-list'),
+            emptyState: document.getElementById('empty-state'),
+            timerDisplay: document.getElementById('timer-display'),
+            timerLabel: document.getElementById('timer-label'),
+            btnStart: document.getElementById('btn-start'),
+            btnPause: document.getElementById('btn-pause'),
+            btnResetTimer: document.getElementById('btn-reset-timer'),
+            btnNextRound: document.getElementById('btn-next-round'),
+            btnFinish: document.getElementById('btn-finish-workout'),
+            statRounds: document.getElementById('stat-rounds'),
+            statReps: document.getElementById('stat-reps'),
+            statCount: document.getElementById('stat-count'),
+            historySection: document.getElementById('history-section'),
+            historyList: document.getElementById('history-list'),
+            btnToggleHistory: document.getElementById('btn-toggle-history'),
+            historyArrow: document.getElementById('history-arrow'),
+            
+            // Timer Settings
+            btnModeStopwatch: document.getElementById('mode-stopwatch'),
+            btnModeTimer: document.getElementById('mode-timer'),
+            groupTimerInput: document.getElementById('timer-input-group'),
+            inputTimerMinutes: document.getElementById('input-timer-minutes'),
+
+            // Auth Elements
+            authLoading: document.getElementById('auth-loading'),
+            userInfo: document.getElementById('user-info'),
+            userAvatar: document.getElementById('user-avatar'),
+            userName: document.getElementById('user-name'),
+            btnLogin: document.getElementById('btn-login'),
+            btnLogout: document.getElementById('btn-logout'),
+            authWarning: document.getElementById('auth-warning')
+        };
+
+        // --- Initialization ---
+        initFirebase();
+        lucide.createIcons();
+        updateTimerDisplay();
+
+        async function initFirebase() {
+            try {
+                const customConfig = {
+                    apiKey: "AIzaSy...",
+                    authDomain: "auth.wrestling.systems", 
+                    projectId: "wrestlingsystems",
+                    storageBucket: "wrestlingsystems.firebasestorage.app",
+                    messagingSenderId: "255692661115",
+                    appId: "1:255692661115:web:c2df7cf79d3eb14b20ddde"
+                };
+
+                // Logic to use your config if provided, otherwise fallback to environment (for preview)
+                // This ensures the preview works for me, but uses YOUR config when you edit it.
+                const firebaseConfig = Object.keys(customConfig).length > 0 
+                    ? customConfig 
+                    : (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {});
+
+                // If local/no config, this might fail, handle gracefully if needed for UI only
+                if(Object.keys(firebaseConfig).length > 0) {
+                    app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    // Handle Auth Flow
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        // Environment auto-login
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        // Check if already signed in, otherwise wait for user action
+                        // signInAnonymously is a fallback if google auth fails or isn't desired immediately
+                        // But we want Google Auth primarily.
+                    }
+
+                    onAuthStateChanged(auth, (currentUser) => {
+                        user = currentUser;
+                        updateAuthUI();
+                        if (user) {
+                            setupHistoryListener();
+                        } else {
+                            els.historyList.innerHTML = '<p class="text-gray-600 text-sm text-center py-4">Sign in to view workout history.</p>';
+                        }
+                    });
+                } else {
+                    console.warn("No Firebase Config found. App running in offline/demo mode (Auth disabled).");
+                    els.authLoading.textContent = "Offline Mode";
+                }
+            } catch (error) {
+                console.error("Firebase Init Error:", error);
+                els.authLoading.textContent = "Auth Error";
+            }
+        }
+
+        // --- Auth Functions ---
+
+        async function loginWithGoogle() {
+            if (!auth) return;
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+                showToast("Signed in successfully!", "success");
+            } catch (error) {
+                console.error("Login Failed:", error);
+                showToast("Login failed. See console.", "error");
+            }
+        }
+
+        async function logout() {
+            if (!auth) return;
+            try {
+                await signOut(auth);
+                // Clean up listeners
+                if(unsubscribeHistory) unsubscribeHistory();
+                showToast("Signed out", "neutral");
+            } catch (error) {
+                console.error("Logout Failed:", error);
+            }
+        }
+
+        function updateAuthUI() {
+            els.authLoading.classList.add('hidden');
+            if (user) {
+                els.btnLogin.classList.add('hidden');
+                els.userInfo.classList.remove('hidden');
+                els.userInfo.classList.add('flex');
+                els.userName.textContent = user.displayName || "User";
+                if (user.photoURL) {
+                    els.userAvatar.src = user.photoURL;
+                    els.userAvatar.classList.remove('hidden');
+                } else {
+                    els.userAvatar.classList.add('hidden');
+                }
+                els.authWarning.classList.add('hidden');
+            } else {
+                els.userInfo.classList.add('hidden');
+                els.userInfo.classList.remove('flex');
+                els.btnLogin.classList.remove('hidden');
+                els.authWarning.classList.remove('hidden');
+            }
+        }
+
+        // --- History & Storage (Firestore) ---
+
+        function setupHistoryListener() {
+            if (!user || !db) return;
+
+            // RULE 1: Use specific path structure
+            const workoutsRef = collection(db, 'artifacts', appId, 'users', user.uid, 'workouts');
+            // RULE 2: Simple query
+            const q = query(workoutsRef, orderBy('timestamp', 'desc'));
+
+            unsubscribeHistory = onSnapshot(q, (snapshot) => {
+                els.historyList.innerHTML = '';
+                if (snapshot.empty) {
+                    els.historyList.innerHTML = '<p class="text-gray-600 italic text-sm text-center">No workout history found.</p>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    renderHistoryItem(doc.data());
+                });
+            }, (error) => {
+                console.error("History Sync Error:", error);
+                els.historyList.innerHTML = '<p class="text-red-500 text-sm text-center">Error syncing history.</p>';
+            });
+        }
+
+        async function saveToHistory(workoutData) {
+            if (!user) {
+                showToast("Sign in to save workouts!", "error");
+                return;
+            }
+            if (!db) return;
+
+            try {
+                // Add server timestamp
+                const dataToSave = {
+                    ...workoutData,
+                    timestamp: serverTimestamp()
+                };
+                
+                const workoutsRef = collection(db, 'artifacts', appId, 'users', user.uid, 'workouts');
+                await addDoc(workoutsRef, dataToSave);
+                
+                showToast("Workout Saved to Cloud!", "success");
+            } catch (error) {
+                console.error("Save Error:", error);
+                showToast("Failed to save workout.", "error");
+            }
+        }
+
+        function renderHistoryItem(w) {
+            const item = document.createElement('div');
+            item.className = "bg-gray-900/80 p-5 rounded-xl border border-gray-800 hover:border-amber-400/50 transition-colors animate-in fade-in slide-in-from-top-2 duration-300";
+            
+            const exSummary = w.exercises ? w.exercises.filter(e => e.total > 0).map(e => `${e.total} ${e.name}`).join(', ') : '';
+            
+            let avgTimeStr = '';
+            if(w.roundSplits && w.roundSplits.length > 0) {
+               avgTimeStr = `<div class="mt-2 pt-2 border-t border-gray-800 text-xs text-gray-500">Last Round: ${w.roundSplits[w.roundSplits.length-1].time}</div>`;
+            }
+
+            item.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-bold text-gray-200 text-lg">${w.date}</span>
+                    <span class="text-xs bg-gray-800 text-amber-400 px-3 py-1 rounded-full border border-gray-700 font-mono">${w.time}</span>
+                </div>
+                <div class="flex gap-6 text-sm text-gray-400 mb-3 border-b border-gray-800 pb-3">
+                    <span><strong class="text-amber-400 text-lg">${w.totalRounds}</strong> Rounds</span>
+                    <span><strong class="text-cyan-400 text-lg">${w.totalReps}</strong> Reps</span>
+                </div>
+                <p class="text-xs text-gray-500 truncate font-mono">${exSummary || 'No reps recorded'}</p>
+                ${avgTimeStr}
+            `;
+            els.historyList.appendChild(item);
+        }
+
+
+        // --- Event Listeners ---
+        
+        // Auth
+        els.btnLogin.addEventListener('click', loginWithGoogle);
+        els.btnLogout.addEventListener('click', logout);
+
+        // Timer Mode Toggles
+        els.btnModeStopwatch.addEventListener('click', () => setTimerMode('stopwatch'));
+        els.btnModeTimer.addEventListener('click', () => setTimerMode('timer'));
+        
+        els.inputTimerMinutes.addEventListener('change', (e) => {
+            state.timer.targetMinutes = parseInt(e.target.value) || 10;
+            if(!state.timer.isRunning) updateTimerDisplay();
+        });
+
+        // Search & Inputs
+        els.inputSearch.addEventListener('input', (e) => handleSearch(e.target.value));
+        els.inputSearch.addEventListener('focus', () => { if(els.inputSearch.value) handleSearch(els.inputSearch.value); });
+        document.addEventListener('click', (e) => {
+            if (!els.inputSearch.contains(e.target) && !els.listSuggestions.contains(e.target)) {
+                els.listSuggestions.classList.add('hidden');
+            }
+        });
+        els.btnAdd.addEventListener('click', () => {
+            const name = els.inputSearch.value.trim();
+            const reps = parseInt(els.inputReps.value) || 10;
+            if (name) addExercise(name, reps);
+        });
+        els.inputSearch.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') els.btnAdd.click();
+        });
+
+        // Controls
+        els.btnStart.addEventListener('click', startTimer);
+        els.btnPause.addEventListener('click', pauseTimer);
+        els.btnResetTimer.addEventListener('click', resetTimer);
+        els.btnNextRound.addEventListener('click', finishRound);
+        els.btnFinish.addEventListener('click', finishWorkout);
+
+        // UI Toggles
+        els.btnToggleHistory.addEventListener('click', () => {
+            els.historySection.classList.toggle('hidden');
+            els.historyArrow.classList.toggle('rotate-180');
+        });
+
+        // --- Core Application Logic ---
+
+        function setTimerMode(mode) {
+            state.timer.mode = mode;
+            if (mode === 'stopwatch') {
+                els.btnModeStopwatch.classList.add('bg-amber-400', 'text-black', 'shadow-sm');
+                els.btnModeStopwatch.classList.remove('text-gray-500', 'hover:text-gray-300');
+                els.btnModeTimer.classList.remove('bg-amber-400', 'text-black', 'shadow-sm');
+                els.btnModeTimer.classList.add('text-gray-500', 'hover:text-gray-300');
+                els.groupTimerInput.classList.add('hidden');
+                els.timerLabel.textContent = "Current Round (Up)";
+            } else {
+                els.btnModeTimer.classList.add('bg-amber-400', 'text-black', 'shadow-sm');
+                els.btnModeTimer.classList.remove('text-gray-500', 'hover:text-gray-300');
+                els.btnModeStopwatch.classList.remove('bg-amber-400', 'text-black', 'shadow-sm');
+                els.btnModeStopwatch.classList.add('text-gray-500', 'hover:text-gray-300');
+                els.groupTimerInput.classList.remove('hidden');
+                els.timerLabel.textContent = "Current Round (Down)";
+            }
+            resetTimer();
+        }
+
+        function handleSearch(query) {
+            if (!query) {
+                els.listSuggestions.classList.add('hidden');
+                return;
+            }
+            const lowerQuery = query.toLowerCase();
+            const matches = PREDEFINED_EXERCISES.filter(ex => ex.toLowerCase().includes(lowerQuery));
+            els.listSuggestions.innerHTML = '';
+            els.listSuggestions.classList.remove('hidden');
+
+            if (matches.length === 0) {
+                const li = document.createElement('li');
+                li.className = "p-4 hover:bg-gray-800 cursor-pointer text-amber-400 font-semibold border-t border-gray-800";
+                li.innerHTML = `<span class="text-xs text-gray-500 block font-normal mb-1">No match found</span>Create "${query}"`;
+                li.onclick = () => {
+                    els.inputSearch.value = query; 
+                    els.listSuggestions.classList.add('hidden');
+                    els.inputReps.focus();
+                };
+                els.listSuggestions.appendChild(li);
+            } else {
+                matches.forEach(match => {
+                    const li = document.createElement('li');
+                    li.className = "p-3 hover:bg-gray-800 cursor-pointer text-gray-300 border-b border-gray-800 last:border-0 font-medium";
+                    li.textContent = match;
+                    li.onclick = () => {
+                        els.inputSearch.value = match;
+                        els.listSuggestions.classList.add('hidden');
+                        els.inputReps.focus();
+                    };
+                    els.listSuggestions.appendChild(li);
+                });
+            }
+        }
+
+        function addExercise(name, defaultReps) {
+            const id = Date.now().toString();
+            state.exercises.push({
+                id,
+                name,
+                defaultReps,
+                currentReps: defaultReps,
+                completed: false,
+                totalRepsDone: 0
+            });
+            els.inputSearch.value = '';
+            els.inputReps.value = '10';
+            els.listSuggestions.classList.add('hidden');
+            renderWorkoutList();
+            updateStats();
+            showToast(`Added ${name}`, "success");
+        }
+
+        function renderWorkoutList() {
+            if (state.exercises.length === 0) {
+                els.workoutList.innerHTML = '';
+                els.workoutList.appendChild(els.emptyState);
+                return;
+            }
+            if (els.workoutList.contains(els.emptyState)) {
+                els.workoutList.innerHTML = '';
+            }
+            els.workoutList.innerHTML = '';
+
+            state.exercises.forEach(ex => {
+                const card = document.createElement('div');
+                card.className = `exercise-card relative p-5 rounded-xl border-l-4 transition-all duration-300 ${ex.completed ? 'bg-gray-900/40 border-gray-700 opacity-50' : 'bg-gray-800 border-amber-400 shadow-lg'} mb-2 border-t border-r border-b border-gray-700/50`;
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold text-xl text-white ${ex.completed ? 'line-through text-gray-500' : ''}">${ex.name}</h3>
+                        <button onclick="window.removeExercise('${ex.id}')" class="text-gray-600 hover:text-red-500 transition-colors p-1" title="Remove">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center bg-black/50 rounded-lg p-1 border border-gray-700">
+                            <button onclick="window.adjustReps('${ex.id}', -1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition-all font-bold text-xl">-</button>
+                            <input type="number" readonly value="${ex.currentReps}" class="w-16 text-center bg-transparent font-bold text-2xl text-white focus:outline-none">
+                            <button onclick="window.adjustReps('${ex.id}', 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition-all font-bold text-xl">+</button>
+                        </div>
+                        <button onclick="window.toggleComplete('${ex.id}')" class="flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase tracking-wider transition-all shadow-md flex justify-center items-center gap-2 ${ex.completed ? 'bg-gray-800 text-green-500 border border-green-900/50' : 'bg-amber-400 text-black hover:bg-white hover:text-black border-none shadow-[0_0_10px_rgba(250,204,21,0.3)]'}">
+                            ${ex.completed ? '<i data-lucide="check" class="w-5 h-5"></i> Done' : 'Complete'}
+                        </button>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-500 font-medium text-right uppercase tracking-wider">
+                        Total: <span class="text-amber-400 font-bold text-sm">${ex.totalRepsDone}</span> reps
+                    </div>
+                `;
+                els.workoutList.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        // --- Exposing functions to window (for HTML onclick handlers) ---
+        window.adjustReps = (id, amount) => {
+            const ex = state.exercises.find(e => e.id === id);
+            if (ex && !ex.completed) {
+                ex.currentReps = Math.max(0, ex.currentReps + amount);
+                renderWorkoutList();
+            }
+        };
+
+        window.toggleComplete = (id) => {
+            const ex = state.exercises.find(e => e.id === id);
+            if (ex) {
+                ex.completed = !ex.completed;
+                renderWorkoutList();
+                const allDone = state.exercises.every(e => e.completed);
+                if (allDone) {
+                    els.btnNextRound.classList.add('ring-2', 'ring-offset-2', 'ring-amber-400', 'ring-offset-black', 'bg-amber-400', 'text-black');
+                    els.btnNextRound.classList.remove('bg-transparent', 'text-amber-400');
+                } else {
+                    els.btnNextRound.classList.remove('ring-2', 'ring-offset-2', 'ring-amber-400', 'ring-offset-black', 'bg-amber-400', 'text-black');
+                    els.btnNextRound.classList.add('bg-transparent', 'text-amber-400');
+                }
+            }
+        };
+
+        window.removeExercise = (id) => {
+            state.exercises = state.exercises.filter(ex => ex.id !== id);
+            renderWorkoutList();
+            updateStats();
+        };
+
+        function finishRound() {
+            if (state.exercises.length === 0) {
+                showToast("Add exercises first!", "error");
+                return;
+            }
+            let anythingDone = false;
+            state.exercises.forEach(ex => {
+                if (ex.completed) {
+                    ex.totalRepsDone += ex.currentReps;
+                    state.accumulatedReps += ex.currentReps;
+                    ex.completed = false; 
+                    anythingDone = true;
+                }
+            });
+            if (!anythingDone) {
+                if(!confirm("No exercises were marked as 'Done'. Advance round anyway?")) return;
+            }
+
+            const roundTime = els.timerDisplay.textContent;
+            state.roundHistory.push({ round: state.currentRound + 1, time: roundTime });
+            
+            state.timer.elapsed = 0;
+            state.timer.startTime = Date.now();
+            updateTimerDisplay();
+
+            state.currentRound++;
+            updateStats();
+            renderWorkoutList();
+            
+            els.btnNextRound.classList.remove('ring-2', 'ring-offset-2', 'ring-amber-400', 'ring-offset-black', 'bg-amber-400', 'text-black');
+            els.btnNextRound.classList.add('bg-transparent', 'text-amber-400');
+            showToast(`Round ${state.currentRound} Complete!`, "success");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function finishWorkout() {
+            if (state.accumulatedReps === 0 && state.currentRound === 0) {
+                showToast("Nothing to save!", "error");
+                return;
+            }
+            if(!confirm("Finish and save this workout?")) return;
+
+            pauseTimer();
+
+            const workoutData = {
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString(),
+                totalRounds: state.currentRound,
+                totalReps: state.accumulatedReps,
+                exercises: state.exercises.map(e => ({ name: e.name, total: e.totalRepsDone })),
+                roundSplits: state.roundHistory
+            };
+
+            saveToHistory(workoutData);
+            
+            state.currentRound = 0;
+            state.accumulatedReps = 0;
+            state.exercises = [];
+            state.roundHistory = [];
+            resetTimer();
+            renderWorkoutList();
+            updateStats();
+            els.historySection.classList.remove('hidden');
+        }
+
+        function updateStats() {
+            els.statRounds.textContent = state.currentRound;
+            els.statReps.textContent = state.accumulatedReps;
+            els.statCount.textContent = state.exercises.length;
+        }
+
+        // --- Timer Logic ---
+        function startTimer() {
+            if (state.timer.isRunning) return;
+            state.timer.startTime = Date.now() - state.timer.elapsed;
+            state.timer.interval = setInterval(updateTimerDisplay, 100);
+            state.timer.isRunning = true;
+            els.btnStart.classList.add('hidden');
+            els.btnPause.classList.remove('hidden');
+        }
+
+        function pauseTimer() {
+            if (!state.timer.isRunning) return;
+            clearInterval(state.timer.interval);
+            state.timer.elapsed = Date.now() - state.timer.startTime;
+            state.timer.isRunning = false;
+            els.btnStart.classList.remove('hidden');
+            els.btnPause.classList.add('hidden');
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            state.timer.elapsed = 0;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            let diff;
+            if (state.timer.isRunning) {
+                diff = Date.now() - state.timer.startTime;
+            } else {
+                diff = state.timer.elapsed;
+            }
+
+            let displayTime = diff;
+            let isNegative = false;
+            let displayColorClass = 'text-amber-400';
+
+            if (state.timer.mode === 'timer') {
+                const targetMs = state.timer.targetMinutes * 60 * 1000;
+                let remaining = targetMs - diff;
+                if (remaining < 0) {
+                    isNegative = true;
+                    remaining = Math.abs(remaining);
+                    displayColorClass = 'text-red-500';
+                }
+                displayTime = remaining;
+            }
+
+            const totalSeconds = Math.floor(displayTime / 1000);
+            const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+            const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+            
+            const prefix = isNegative ? '-' : '';
+            els.timerDisplay.textContent = `${prefix}${minutes}:${seconds}`;
+            els.timerDisplay.className = `text-7xl font-mono font-bold tracking-wider mb-6 tabular-nums ${displayColorClass} text-glow cursor-default`;
+            document.title = `${prefix}${minutes}:${seconds} - WOD Track`;
+        }
+
+        function showToast(message, type = 'normal') {
+            const toast = document.createElement('div');
+            let colors = "bg-gray-800 text-white border border-gray-700";
+            if(type === 'success') colors = "bg-black text-amber-400 border border-amber-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]";
+            if(type === 'error') colors = "bg-black text-red-500 border border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]";
+            
+            toast.className = `toast ${colors} px-6 py-4 rounded-xl font-bold text-sm flex items-center gap-3 backdrop-blur-md`;
+            toast.innerHTML = type === 'success' ? `<i data-lucide="check-circle" class="w-5 h-5"></i> ${message}` : message;
+            
+            document.getElementById('toast-container').appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
