@@ -71,11 +71,43 @@
             animation: slideIn 0.3s ease-out forwards;
         }
         
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-content {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom Gold Color for modal */
+        .bg-gold-500 { background-color: #D4AF37; }
+        .hover\:bg-gold-600:hover { background-color: #C09B2D; }
+        .text-gold-300 { color: #E6C75E; }
+        .focus\:ring-gold-500:focus { --tw-ring-color: #D4AF37; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center py-8 px-4 bg-black bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-black to-black">
@@ -235,14 +267,101 @@
 
     </main>
 
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay bg-black/80">
+        <div class="modal-content w-full max-w-md bg-gray-900 backdrop-blur-sm rounded-2xl shadow-2xl border border-amber-400/30">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-800 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-white">Sign In / Sign Up</h2>
+                <button id="btn-close-modal" class="text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6">
+                <p class="text-gray-400 text-center mb-6">Choose your sign-in method to save your workouts</p>
+
+                <!-- Social Logins -->
+                <div class="space-y-3 mb-6">
+                    <button id="modal-google-signin" class="w-full flex items-center justify-center py-3 px-4 border border-gray-600 rounded-lg shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
+                        <svg class="w-5 h-5 mr-3 text-gold-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 172.9 60.3L360 128.2c-23.2-21.5-58.2-34.6-112-34.6-88.6 0-161.2 71.5-161.2 162.3s72.6 162.3 161.2 162.3c98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 26.9 3.9 41.4z"></path></svg>
+                        <span>Continue with Google</span>
+                    </button>
+                    <button id="modal-facebook-signin" class="w-full flex items-center justify-center py-3 px-4 border border-gray-600 rounded-lg shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
+                        <svg class="w-5 h-5 mr-3 text-gold-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"></path></svg>
+                        <span>Continue with Facebook</span>
+                    </button>
+                    <button id="modal-microsoft-signin" class="w-full flex items-center justify-center py-3 px-4 border border-gray-600 rounded-lg shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
+                        <svg class="w-5 h-5 mr-3 text-gold-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M0 32h192v192H0V32zm256 0h192v192H256V32zM0 288h192v192H0V288zm256 288h192v-96H256v96zm0-128h192v-96H256v96z"></path></svg>
+                        <span>Continue with Microsoft</span>
+                    </button>
+                </div>
+
+                <!-- Divider -->
+                <div class="flex items-center mb-6">
+                    <div class="flex-grow border-t border-gray-700"></div>
+                    <span class="flex-shrink mx-4 text-gray-500 text-sm">Or sign up with email</span>
+                    <div class="flex-grow border-t border-gray-700"></div>
+                </div>
+
+                <!-- Email/Password Form -->
+                <form id="modal-signup-form" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="modal-firstName" class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
+                            <input type="text" id="modal-firstName" name="firstName" required
+                                class="w-full bg-gray-800 border border-gray-700 rounded-lg shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
+                        </div>
+                        <div>
+                            <label for="modal-lastName" class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
+                            <input type="text" id="modal-lastName" name="lastName" required
+                                class="w-full bg-gray-800 border border-gray-700 rounded-lg shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="modal-email" class="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
+                        <input type="email" id="modal-email" name="email" required
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
+                    </div>
+                    <div>
+                        <label for="modal-password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                        <input type="password" id="modal-password" name="password" required minlength="6"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
+                    </div>
+                    <div>
+                        <button type="submit" id="modal-submit-button"
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-black bg-gold-500 hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+
+                <p id="modal-error-message" class="text-red-400 text-sm text-center mt-4"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3"></div>
 
     <script type="module">
         // --- Firebase Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import {
+            getAuth,
+            signInWithPopup,
+            GoogleAuthProvider,
+            FacebookAuthProvider,
+            OAuthProvider,
+            signOut,
+            onAuthStateChanged,
+            signInWithCustomToken,
+            signInAnonymously,
+            createUserWithEmailAndPassword
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
         // --- Data & State ---
         let app, auth, db, user, unsubscribeHistory;
@@ -316,7 +435,17 @@
             userName: document.getElementById('user-name'),
             btnLogin: document.getElementById('btn-login'),
             btnLogout: document.getElementById('btn-logout'),
-            authWarning: document.getElementById('auth-warning')
+            authWarning: document.getElementById('auth-warning'),
+
+            // Modal Elements
+            authModal: document.getElementById('auth-modal'),
+            btnCloseModal: document.getElementById('btn-close-modal'),
+            modalGoogleSignin: document.getElementById('modal-google-signin'),
+            modalFacebookSignin: document.getElementById('modal-facebook-signin'),
+            modalMicrosoftSignin: document.getElementById('modal-microsoft-signin'),
+            modalSignupForm: document.getElementById('modal-signup-form'),
+            modalSubmitButton: document.getElementById('modal-submit-button'),
+            modalErrorMessage: document.getElementById('modal-error-message')
         };
 
         // --- Initialization ---
@@ -345,6 +474,12 @@
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
+
+                // Initialize App Check with reCAPTCHA v3
+                const appCheck = initializeAppCheck(app, {
+                    provider: new ReCaptchaV3Provider('6Ler2pgrAAAAAAQwDvNoe4voerXxtlVTwvdi0sg2'),
+                    isTokenAutoRefreshEnabled: true
+                });
 
                 // Handle Auth Flow - Immediate check/login
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -377,15 +512,123 @@
 
         // --- Auth Functions ---
 
-        async function loginWithGoogle() {
-            if (!auth) return;
-            const provider = new GoogleAuthProvider();
+        // Modal Control Functions
+        function openAuthModal() {
+            els.authModal.classList.remove('hidden');
+            els.modalErrorMessage.textContent = '';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAuthModal() {
+            els.authModal.classList.add('hidden');
+            document.body.style.overflow = '';
+            els.modalSignupForm.reset();
+            els.modalErrorMessage.textContent = '';
+        }
+
+        // Helper function to create user in Firestore after social sign-in
+        async function createSocialUserInFirestore(user) {
             try {
-                await signInWithPopup(auth, provider);
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+
+                if (!docSnap.exists()) {
+                    const nameParts = user.displayName ? user.displayName.split(' ') : ['', ''];
+                    const firstName = nameParts[0];
+                    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+                    await setDoc(userRef, {
+                        firstName: firstName,
+                        lastName: lastName,
+                        email: user.email,
+                        createdAt: new Date(),
+                        provider: user.providerData[0].providerId
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to save user data:", error);
+                throw error;
+            }
+        }
+
+        // Social Sign-in Handler
+        async function handleSocialSignIn(provider, providerName) {
+            if (!auth) return;
+            els.modalErrorMessage.textContent = '';
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                await createSocialUserInFirestore(result.user);
+                closeAuthModal();
                 showToast("Signed in successfully!", "success");
             } catch (error) {
-                console.error("Login Failed:", error);
-                showToast("Login failed. Check console.", "error");
+                console.error(`${providerName} Login Failed:`, error);
+                let friendlyMessage = `Could not sign in with ${providerName}. Please try again.`;
+
+                if (error.code === 'auth/account-exists-with-different-credential') {
+                    friendlyMessage = "An account already exists with this email. Please sign in with your original method.";
+                } else if (error.code.includes('app-check')) {
+                    friendlyMessage = 'Could not verify you are human. Please refresh and try again.';
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    friendlyMessage = 'Authentication domain not authorized. Please contact support.';
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    friendlyMessage = 'Sign-in cancelled.';
+                } else if (error.code === 'permission-denied') {
+                    friendlyMessage = 'Failed to save user data. Please contact support.';
+                }
+
+                els.modalErrorMessage.textContent = friendlyMessage;
+            }
+        }
+
+        // Email/Password Sign-up Handler
+        async function handleEmailSignup(e) {
+            e.preventDefault();
+            if (!auth || !db) return;
+
+            els.modalSubmitButton.disabled = true;
+            els.modalSubmitButton.textContent = 'Creating Account...';
+            els.modalErrorMessage.textContent = '';
+
+            const formData = new FormData(els.modalSignupForm);
+            const firstName = formData.get('firstName');
+            const lastName = formData.get('lastName');
+            const email = formData.get('email');
+            const password = formData.get('password');
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                await setDoc(doc(db, "users", user.uid), {
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email,
+                    createdAt: new Date()
+                });
+
+                closeAuthModal();
+                showToast("Account created successfully!", "success");
+            } catch (error) {
+                console.error("Signup Failed:", error);
+                let friendlyMessage = "An unexpected error occurred.";
+
+                if (error.code === 'auth/email-already-in-use') {
+                    friendlyMessage = 'This email address is already registered.';
+                } else if (error.code === 'auth/weak-password') {
+                    friendlyMessage = 'Password should be at least 6 characters long.';
+                } else if (error.code.includes('app-check')) {
+                    friendlyMessage = 'Could not verify you are human. Please refresh and try again.';
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    friendlyMessage = 'Authentication domain not authorized. Please contact support.';
+                } else if (error.code === 'permission-denied') {
+                    friendlyMessage = 'Failed to save user data. Please contact support.';
+                }
+
+                els.modalErrorMessage.textContent = friendlyMessage;
+            } finally {
+                els.modalSubmitButton.disabled = false;
+                els.modalSubmitButton.textContent = 'Create Account';
             }
         }
 
@@ -540,10 +783,37 @@
 
 
         // --- Event Listeners ---
-        
-        // Auth
-        els.btnLogin.addEventListener('click', loginWithGoogle);
+
+        // Auth & Modal
+        els.btnLogin.addEventListener('click', openAuthModal);
         els.btnLogout.addEventListener('click', logout);
+        els.btnCloseModal.addEventListener('click', closeAuthModal);
+
+        // Close modal when clicking outside
+        els.authModal.addEventListener('click', (e) => {
+            if (e.target === els.authModal) {
+                closeAuthModal();
+            }
+        });
+
+        // Modal Social Sign-ins
+        els.modalGoogleSignin.addEventListener('click', () => {
+            const provider = new GoogleAuthProvider();
+            handleSocialSignIn(provider, 'Google');
+        });
+
+        els.modalFacebookSignin.addEventListener('click', () => {
+            const provider = new FacebookAuthProvider();
+            handleSocialSignIn(provider, 'Facebook');
+        });
+
+        els.modalMicrosoftSignin.addEventListener('click', () => {
+            const provider = new OAuthProvider('microsoft.com');
+            handleSocialSignIn(provider, 'Microsoft');
+        });
+
+        // Modal Email/Password Signup
+        els.modalSignupForm.addEventListener('submit', handleEmailSignup);
 
         // Timer Mode Toggles
         els.btnModeFortime.addEventListener('click', () => setTimerMode('fortime'));
