@@ -679,10 +679,16 @@
         function setupHistoryListener() {
             if (!user || !db) return;
 
-            // RULE 1: Use specific path structure
-            const workoutsRef = collection(db, 'artifacts', appId, 'users', user.uid, 'workouts');
-            
-            // RULE 2: Simple query (Sort in memory to avoid index errors)
+            // Only show history for authenticated (non-anonymous) users
+            if (user.isAnonymous) {
+                els.historyList.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Sign in to view and save workout history.</p>';
+                return;
+            }
+
+            // Use user's workouts collection
+            const workoutsRef = collection(db, 'users', user.uid, 'workouts');
+
+            // Simple query (Sort in memory to avoid index errors)
             const q = query(workoutsRef);
 
             unsubscribeHistory = onSnapshot(q, (snapshot) => {
@@ -714,11 +720,17 @@
         }
 
         async function saveToHistory(workoutData) {
-            if (!user) {
-                showToast("Waiting for connection...", "error");
-                return;
+            if (!db) {
+                showToast("Database not available.", "error");
+                return false;
             }
-            if (!db) return;
+
+            // Check if user is authenticated (not anonymous)
+            if (!user || user.isAnonymous) {
+                showToast("Please sign in to save your workout!", "error");
+                openAuthModal();
+                return false;
+            }
 
             try {
                 // Add server timestamp
@@ -726,23 +738,26 @@
                     ...workoutData,
                     timestamp: serverTimestamp()
                 };
-                
-                const workoutsRef = collection(db, 'artifacts', appId, 'users', user.uid, 'workouts');
+
+                // Save to user's workouts collection
+                const workoutsRef = collection(db, 'users', user.uid, 'workouts');
                 await addDoc(workoutsRef, dataToSave);
-                
-                showToast("Workout Saved to Cloud!", "success");
+
+                showToast("Workout Saved!", "success");
+                return true;
             } catch (error) {
                 console.error("Save Error:", error);
                 showToast("Failed to save workout.", "error");
+                return false;
             }
         }
         
         // Expose delete function globally for the onclick handler
         window.deleteWorkout = async (id) => {
-            if (!user || !db) return;
+            if (!user || !db || user.isAnonymous) return;
             if(!confirm("Delete this record permanently?")) return;
             try {
-                 await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'workouts', id));
+                 await deleteDoc(doc(db, 'users', user.uid, 'workouts', id));
                  showToast("Record deleted", "neutral");
             } catch(e) {
                 console.error(e);
@@ -1057,11 +1072,19 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function finishWorkout() {
+        async function finishWorkout() {
             if (state.accumulatedReps === 0 && state.currentRound === 0) {
                 showToast("Nothing to save!", "error");
                 return;
             }
+
+            // Check if user is signed in before confirming
+            if (!user || user.isAnonymous) {
+                showToast("Please sign in to save your workout!", "error");
+                openAuthModal();
+                return;
+            }
+
             if(!confirm("Finish and save this workout?")) return;
 
             pauseTimer();
@@ -1075,16 +1098,19 @@
                 roundSplits: state.roundHistory
             };
 
-            saveToHistory(workoutData);
-            
-            state.currentRound = 0;
-            state.accumulatedReps = 0;
-            state.exercises = [];
-            state.roundHistory = [];
-            resetTimer();
-            renderWorkoutList();
-            updateStats();
-            els.historySection.classList.remove('hidden');
+            const saved = await saveToHistory(workoutData);
+
+            // Only reset if save was successful
+            if (saved) {
+                state.currentRound = 0;
+                state.accumulatedReps = 0;
+                state.exercises = [];
+                state.roundHistory = [];
+                resetTimer();
+                renderWorkoutList();
+                updateStats();
+                els.historySection.classList.remove('hidden');
+            }
         }
 
         function updateStats() {
