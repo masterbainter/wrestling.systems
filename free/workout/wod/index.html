@@ -268,18 +268,19 @@
     </main>
 
     <!-- Authentication Modal -->
-    <div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay bg-black/80">
-        <div class="modal-content w-full max-w-md bg-gray-900 backdrop-blur-sm rounded-2xl shadow-2xl border border-amber-400/30">
-            <!-- Modal Header -->
-            <div class="p-6 border-b border-gray-800 flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-white">Sign In / Sign Up</h2>
-                <button id="btn-close-modal" class="text-gray-400 hover:text-white transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
+    <div id="auth-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-overlay bg-black/80">
+        <div class="min-h-full flex items-center justify-center p-4">
+            <div class="modal-content w-full max-w-md bg-gray-900 backdrop-blur-sm rounded-2xl shadow-2xl border border-amber-400/30 max-h-[calc(100vh-2rem)] flex flex-col">
+                <!-- Modal Header -->
+                <div class="p-4 sm:p-6 border-b border-gray-800 flex justify-between items-center flex-shrink-0">
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Sign In / Sign Up</h2>
+                    <button id="btn-close-modal" class="text-gray-400 hover:text-white transition-colors">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
 
-            <!-- Modal Content -->
-            <div class="p-6">
+                <!-- Modal Content (Scrollable) -->
+                <div class="p-4 sm:p-6 overflow-y-auto flex-1">
                 <p class="text-gray-400 text-center mb-6">Choose your sign-in method to save your workouts</p>
 
                 <!-- Social Logins -->
@@ -338,6 +339,7 @@
                 </form>
 
                 <p id="modal-error-message" class="text-red-400 text-sm text-center mt-4"></p>
+            </div>
             </div>
         </div>
     </div>
