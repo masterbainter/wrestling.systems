@@ -268,78 +268,78 @@
     </main>
 
     <!-- Authentication Modal -->
-    <div id="auth-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-overlay bg-black/80">
+    <div id="auth-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-overlay bg-black/85">
         <div class="min-h-full flex items-center justify-center p-4">
-            <div class="modal-content w-full max-w-md bg-gray-900 backdrop-blur-sm rounded-2xl shadow-2xl border border-amber-400/30 max-h-[calc(100vh-2rem)] flex flex-col">
+            <div class="modal-content w-full max-w-md bg-gray-900/95 backdrop-blur-md rounded-2xl container-glow max-h-[calc(100vh-2rem)] flex flex-col">
                 <!-- Modal Header -->
-                <div class="p-4 sm:p-6 border-b border-gray-800 flex justify-between items-center flex-shrink-0">
+                <div class="p-4 sm:p-6 border-b border-gray-800/50 flex justify-between items-center flex-shrink-0">
                     <h2 class="text-xl sm:text-2xl font-bold text-white">Sign In / Sign Up</h2>
-                    <button id="btn-close-modal" class="text-gray-400 hover:text-white transition-colors">
+                    <button id="btn-close-modal" class="text-gray-400 hover:text-amber-400 transition-colors p-1 rounded-lg hover:bg-gray-800">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
 
                 <!-- Modal Content (Scrollable) -->
                 <div class="p-4 sm:p-6 overflow-y-auto flex-1">
-                <p class="text-gray-400 text-center mb-6">Choose your sign-in method to save your workouts</p>
+                    <p class="text-gray-400 text-center mb-6">Choose your sign-in method to save your workouts</p>
 
-                <!-- Social Logins -->
-                <div class="space-y-3 mb-6">
-                    <button id="modal-google-signin" class="w-full flex items-center justify-center py-3 px-4 border border-gray-600 rounded-lg shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
-                        <svg class="w-5 h-5 mr-3 text-gold-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 172.9 60.3L360 128.2c-23.2-21.5-58.2-34.6-112-34.6-88.6 0-161.2 71.5-161.2 162.3s72.6 162.3 161.2 162.3c98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 26.9 3.9 41.4z"></path></svg>
-                        <span>Continue with Google</span>
-                    </button>
-                    <button id="modal-facebook-signin" class="w-full flex items-center justify-center py-3 px-4 border border-gray-600 rounded-lg shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
-                        <svg class="w-5 h-5 mr-3 text-gold-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"></path></svg>
-                        <span>Continue with Facebook</span>
-                    </button>
-                    <button id="modal-microsoft-signin" class="w-full flex items-center justify-center py-3 px-4 border border-gray-600 rounded-lg shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
-                        <svg class="w-5 h-5 mr-3 text-gold-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M0 32h192v192H0V32zm256 0h192v192H256V32zM0 288h192v192H0V288zm256 288h192v-96H256v96zm0-128h192v-96H256v96z"></path></svg>
-                        <span>Continue with Microsoft</span>
-                    </button>
-                </div>
-
-                <!-- Divider -->
-                <div class="flex items-center mb-6">
-                    <div class="flex-grow border-t border-gray-700"></div>
-                    <span class="flex-shrink mx-4 text-gray-500 text-sm">Or sign up with email</span>
-                    <div class="flex-grow border-t border-gray-700"></div>
-                </div>
-
-                <!-- Email/Password Form -->
-                <form id="modal-signup-form" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label for="modal-firstName" class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
-                            <input type="text" id="modal-firstName" name="firstName" required
-                                class="w-full bg-gray-800 border border-gray-700 rounded-lg shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
-                        </div>
-                        <div>
-                            <label for="modal-lastName" class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
-                            <input type="text" id="modal-lastName" name="lastName" required
-                                class="w-full bg-gray-800 border border-gray-700 rounded-lg shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="modal-email" class="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
-                        <input type="email" id="modal-email" name="email" required
-                            class="w-full bg-gray-800 border border-gray-700 rounded-lg shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
-                    </div>
-                    <div>
-                        <label for="modal-password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-                        <input type="password" id="modal-password" name="password" required minlength="6"
-                            class="w-full bg-gray-800 border border-gray-700 rounded-lg shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500">
-                    </div>
-                    <div>
-                        <button type="submit" id="modal-submit-button"
-                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-black bg-gold-500 hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 focus:ring-offset-gray-900 transition-all duration-300">
-                            Create Account
+                    <!-- Social Logins -->
+                    <div class="space-y-3 mb-6">
+                        <button id="modal-google-signin" class="w-full flex items-center justify-center py-3 px-4 border border-gray-700 rounded-xl text-sm font-medium text-white bg-gray-800/80 hover:bg-gray-700 hover:border-amber-400/50 focus:outline-none focus:ring-2 focus:ring-amber-400/50 transition-all duration-200">
+                            <svg class="w-5 h-5 mr-3 text-amber-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 172.9 60.3L360 128.2c-23.2-21.5-58.2-34.6-112-34.6-88.6 0-161.2 71.5-161.2 162.3s72.6 162.3 161.2 162.3c98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 26.9 3.9 41.4z"></path></svg>
+                            <span>Continue with Google</span>
+                        </button>
+                        <button id="modal-facebook-signin" class="w-full flex items-center justify-center py-3 px-4 border border-gray-700 rounded-xl text-sm font-medium text-white bg-gray-800/80 hover:bg-gray-700 hover:border-amber-400/50 focus:outline-none focus:ring-2 focus:ring-amber-400/50 transition-all duration-200">
+                            <svg class="w-5 h-5 mr-3 text-amber-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"></path></svg>
+                            <span>Continue with Facebook</span>
+                        </button>
+                        <button id="modal-microsoft-signin" class="w-full flex items-center justify-center py-3 px-4 border border-gray-700 rounded-xl text-sm font-medium text-white bg-gray-800/80 hover:bg-gray-700 hover:border-amber-400/50 focus:outline-none focus:ring-2 focus:ring-amber-400/50 transition-all duration-200">
+                            <svg class="w-5 h-5 mr-3 text-amber-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M0 32h192v192H0V32zm256 0h192v192H256V32zM0 288h192v192H0V288zm256 288h192v-96H256v96zm0-128h192v-96H256v96z"></path></svg>
+                            <span>Continue with Microsoft</span>
                         </button>
                     </div>
-                </form>
 
-                <p id="modal-error-message" class="text-red-400 text-sm text-center mt-4"></p>
-            </div>
+                    <!-- Divider -->
+                    <div class="flex items-center mb-6">
+                        <div class="flex-grow border-t border-gray-700/50"></div>
+                        <span class="flex-shrink mx-4 text-gray-500 text-sm">Or sign up with email</span>
+                        <div class="flex-grow border-t border-gray-700/50"></div>
+                    </div>
+
+                    <!-- Email/Password Form -->
+                    <form id="modal-signup-form" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="modal-firstName" class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
+                                <input type="text" id="modal-firstName" name="firstName" required
+                                    class="w-full bg-gray-800/80 border border-gray-700 rounded-xl py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/50 transition-colors">
+                            </div>
+                            <div>
+                                <label for="modal-lastName" class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
+                                <input type="text" id="modal-lastName" name="lastName" required
+                                    class="w-full bg-gray-800/80 border border-gray-700 rounded-xl py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/50 transition-colors">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="modal-email" class="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
+                            <input type="email" id="modal-email" name="email" required
+                                class="w-full bg-gray-800/80 border border-gray-700 rounded-xl py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/50 transition-colors">
+                        </div>
+                        <div>
+                            <label for="modal-password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                            <input type="password" id="modal-password" name="password" required minlength="6"
+                                class="w-full bg-gray-800/80 border border-gray-700 rounded-xl py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/50 transition-colors">
+                        </div>
+                        <div>
+                            <button type="submit" id="modal-submit-button"
+                                class="w-full flex justify-center py-3 px-4 rounded-xl text-sm font-bold text-black bg-amber-400 hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400/50 btn-glow transition-all duration-200">
+                                Create Account
+                            </button>
+                        </div>
+                    </form>
+
+                    <p id="modal-error-message" class="text-red-400 text-sm text-center mt-4"></p>
+                </div>
             </div>
         </div>
     </div>
@@ -1273,16 +1273,35 @@
 
         function showToast(message, type = 'normal') {
             const toast = document.createElement('div');
-            let colors = "bg-gray-800 text-white border border-gray-700";
-            if(type === 'success') colors = "bg-black text-amber-400 border border-amber-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]";
-            if(type === 'error') colors = "bg-black text-red-500 border border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]";
-            
-            toast.className = `toast ${colors} px-6 py-4 rounded-xl font-bold text-sm flex items-center gap-3 backdrop-blur-md`;
-            toast.innerHTML = type === 'success' ? `<i data-lucide="check-circle" class="w-5 h-5"></i> ${message}` : message;
-            
+
+            // Style configurations matching page design
+            const styles = {
+                success: {
+                    classes: "bg-gray-900/95 text-amber-400 border border-amber-400/50 shadow-[0_0_20px_rgba(250,204,21,0.25)]",
+                    icon: "check-circle"
+                },
+                error: {
+                    classes: "bg-gray-900/95 text-red-400 border border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.25)]",
+                    icon: "alert-circle"
+                },
+                neutral: {
+                    classes: "bg-gray-900/95 text-gray-300 border border-gray-700 shadow-[0_0_20px_rgba(0,0,0,0.5)]",
+                    icon: "info"
+                },
+                normal: {
+                    classes: "bg-gray-900/95 text-gray-300 border border-gray-700 shadow-[0_0_20px_rgba(0,0,0,0.5)]",
+                    icon: "info"
+                }
+            };
+
+            const style = styles[type] || styles.normal;
+
+            toast.className = `toast ${style.classes} px-5 py-3 rounded-xl font-medium text-sm flex items-center gap-3 backdrop-blur-md`;
+            toast.innerHTML = `<i data-lucide="${style.icon}" class="w-5 h-5 flex-shrink-0"></i> <span>${message}</span>`;
+
             document.getElementById('toast-container').appendChild(toast);
             lucide.createIcons();
-            
+
             setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(10px)';
